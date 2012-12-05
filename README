@@ -5,3 +5,9 @@ Also incorporates error-correction (Levenshtein distance 1) and simple Unicode-t
 License: CC BY-SA 3.0 (http://creativecommons.org/licenses/by-sa/3.0/)
 You are free to share and remix this work, as long as you attribute the original author, and share it under a similar license
 Author: Mark Canning
+
+To Install: go get github.com/argusdusty/Ferret
+To Update: go get -u github.com/argusdusty/Ferret
+To Use: import "github.com/argusdusty/Ferret"
+
+Check out example.go for example usage. The code is meant to be as fast as possible for a substring dictionary search, and as such is best suited for large dictionaries with >1,000,000 total characters. I've timed 20s initialization for 3.5 million characters on a modern CPU (350,000 entries), and 200us search time (3ms with error-correction).
