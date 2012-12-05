@@ -1,0 +1,7 @@
+Ferret: An optimized substring search engine written in Go.
+Makes use of a combination of an Inverted Index and a Suffix Array to allow log-time lookups with a very small memory footprint.
+Also incorporates error-correction (Levenshtein distance 1) and simple Unicode-to-ASCII conversion.
+
+License: CC BY-SA 3.0 (http://creativecommons.org/licenses/by-sa/3.0/)
+You are free to share and remix this work, as long as you attribute the original author, and share it under a similar license
+Author: Mark Canning
