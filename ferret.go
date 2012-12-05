@@ -62,11 +62,13 @@ func MakeInvertedSuffix(Words []string, Conversion func(string) []byte, ResultsL
 
 // Adds a word to the dictionary that IS was built on.
 // This is pretty slow, so stick to MakeInvertedSuffix when you can
-func (IS *InvertedSuffix) Insert(Word []byte) {
-	Length := len(Word)
+func (IS *InvertedSuffix) Insert(Word string, Conversion func(string) []byte) {
 	i := len(IS.Words)
-	IS.Words = append(IS.Words, Word)
+	ByteWord := Conversion(Word)
+	IS.Words = append(IS.Words, ByteWord)
+	Length := len(ByteWord)
 	IS.Lengths = append(IS.Lengths, Length)
+	IS.OrigWords = append(IS.OrigWords, Word)
 	for j := 0; j < Length; j++ {
 		k := sort.Search(IS.Len(), func(h int) bool {
 			y := IS.WordIndex[h]
