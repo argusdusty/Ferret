@@ -6,22 +6,23 @@ import (
 )
 
 var ExampleDictionary = []string{
-	"abdeblah"
-	"foobar"
-	"barfoo"
-	"qwerty"
-	"testing"
-	"example"
-	"dictionary"
-	"dvorak"
-	"ferret"
+	"abdeblah",
+	"foobar",
+	"barfoo",
+	"qwerty",
+	"testing",
+	"example",
+	"dictionary",
+	"dvorak",
+	"ferret",
 }
 
 func main() {
 	ExampleConversion := func(s string) []byte { return []byte(s) }
 	ExampleInvertedSuffix := ferret.MakeInvertedSuffix(ExampleDictionary, ExampleConversion, 5)
-	fmt.Println(ferret.Query([]byte{"test"}))
-	fmt.Println(ferret.Query([]byte{"a"}))
-	fmt.Println(ferret.PrefixQuery([]byte{"a"}))
-	fmt.Println(ferret.Query([]byte{"ar"}))
+	fmt.Println(ExampleInvertedSuffix.Query([]byte("test"), false, make([]byte, 0)))
+	fmt.Println(ExampleInvertedSuffix.Query([]byte("a"), false, make([]byte, 0)))
+	fmt.Println(ExampleInvertedSuffix.PrefixQuery("a"))
+	fmt.Println(ExampleInvertedSuffix.Query([]byte("ar"), false, make([]byte, 0)))
+	fmt.Println(ExampleInvertedSuffix.Query([]byte("tsst"), true, ferret.LowercaseASCII))
 }

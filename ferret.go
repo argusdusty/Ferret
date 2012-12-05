@@ -28,9 +28,10 @@ func (IS *InvertedSuffix) Len() int {
 // bytes.Compare(S.Words[S.WordIndex[i]][S.SuffixIndex[i]:], S.Words[S.WordIndex[j]][S.SuffixIndex[j]:]) <= 0
 // but faster
 func (IS *InvertedSuffix) Less(i, j int) bool {
-	a := IS.Words[IS.WordIndex[i]]; b := IS.Words[IS.WordIndex[j]]
+	x := IS.WordIndex[i]; y := IS.WordIndex[j]
+	a := IS.Words[x]; b := IS.Words[y]
 	pa := IS.SuffixIndex[i]; pb := IS.SuffixIndex[j]
-	na := IS.Lengths[i]; nb := IS.Lengths[j]
+	na := IS.Lengths[x]; nb := IS.Lengths[y]
 	for pa < na && pb < nb {
 		wa := a[pa]; wb := b[pb]
 		if wa < wb { return true }
@@ -47,7 +48,6 @@ func MakeInvertedSuffix(Words []string, Conversion func(string) []byte, ResultsL
 	SuffixIndex := make([]int, 0)
 	NewWords := make([][]byte, 0)
 	Lengths := make([]int, 0)
-	OrigWords := make([]string, 0)
 	SortedWords := make([]string, 0)
 	for i, Word := range(Words) {
 		ByteWord := Conversion(Word); N := len(ByteWord)
@@ -57,11 +57,10 @@ func MakeInvertedSuffix(Words []string, Conversion func(string) []byte, ResultsL
 		}
 		NewWords = append(NewWords, ByteWord)
 		Lengths = append(Lengths, N)
-		OrigWords = append(OrigWords, Word)
 		SortedWords = append(SortedWords, Word)
 	}
 	sort.Strings(SortedWords)
-	Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, NewWords, Lengths, OrigWords, Words, ResultsLimit}
+	Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, NewWords, Lengths, Words, SortedWords, ResultsLimit}
 	sort.Sort(Suffixes)
 	return Suffixes
 }
@@ -75,9 +74,10 @@ func (IS *InvertedSuffix) Insert(Word []byte) {
 	IS.Lengths = append(IS.Lengths, Length)
 	for j := 0; j < Length; j++ {
 		k := sort.Search(IS.Len(), func(h int) bool {
-			a := Word; b := IS.Words[IS.WordIndex[h]]
+			y := IS.WordIndex[h]
+			a := Word; b := IS.Words[y]
 			pa := j; pb := IS.SuffixIndex[j]
-			na := Length; nb := IS.Lengths[j]
+			na := Length; nb := IS.Lengths[y]
 			for pa < na && pb < nb {
 				wa := a[pa]; wb := b[pb]
 				if wa < wb { return true }
@@ -130,7 +130,7 @@ func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 				i = h + 1
 			} else {
 				e := Word[d]
-				if e < c {
+				if e <= c {
 					i = h + 1
 				} else {
 					j = h
@@ -164,7 +164,7 @@ func (IS *InvertedSuffix) Query(Query []byte, FaultTolerance bool, AllowedBytes 
 		}
 	}
 	if FaultTolerance && a == 0 && n < 20 {
-		for _, q := range(ErrorCorrect(Query, LowercaseASCII)) {
+		for _, q := range(ErrorCorrect(Query, AllowedBytes)) {
 			low, high := IS.Search(q)
 			for k := low; k < high; k++ {
 				x := IS.WordIndex[k]
