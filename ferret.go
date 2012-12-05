@@ -2,7 +2,6 @@ package ferret
 
 import (
 	"sort"
-	"strings"
 )
 
 type InvertedSuffix struct {
@@ -11,7 +10,6 @@ type InvertedSuffix struct {
 	Words [][]byte // Unsorted list of []byte-converted dictionary words
 	Lengths []int // Caching for performance. IS.Lengths[i] == len(IS.Words[i])
 	OrigWords []string // Original value of []byte-converted words
-	SortedWords []string // Sorted list of original dictionary words
 	ResultsLimit int // Set to -1 for no results limit
 }
 
@@ -48,7 +46,6 @@ func MakeInvertedSuffix(Words []string, Conversion func(string) []byte, ResultsL
 	SuffixIndex := make([]int, 0)
 	NewWords := make([][]byte, 0)
 	Lengths := make([]int, 0)
-	SortedWords := make([]string, 0)
 	for i, Word := range(Words) {
 		ByteWord := Conversion(Word); N := len(ByteWord)
 		for j := 0; j < N; j++ {
@@ -57,10 +54,8 @@ func MakeInvertedSuffix(Words []string, Conversion func(string) []byte, ResultsL
 		}
 		NewWords = append(NewWords, ByteWord)
 		Lengths = append(Lengths, N)
-		SortedWords = append(SortedWords, Word)
 	}
-	sort.Strings(SortedWords)
-	Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, NewWords, Lengths, Words, SortedWords, ResultsLimit}
+	Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, NewWords, Lengths, Words, ResultsLimit}
 	sort.Sort(Suffixes)
 	return Suffixes
 }
@@ -182,19 +177,6 @@ func (IS *InvertedSuffix) Query(Query []byte, FaultTolerance bool, AllowedBytes 
 				}
 			}
 		}
-	}
-	return Results
-}
-
-// Returns the strings which have the query as a prefix
-// Unoptomized, but should still run in the optimal running time (O(ln(IS.Len())*len(Query)))
-func (IS *InvertedSuffix) PrefixQuery(Query string) []string {
-	Results := make([]string, 0); a := 0
-	for i := sort.SearchStrings(IS.SortedWords, Query); ; i++ {
-		Word := IS.SortedWords[i]
-		if !strings.HasPrefix(Word, Query) { break }
-		Results = append(Results, Word); a++
-		if a == IS.ResultsLimit { return Results }
 	}
 	return Results
 }

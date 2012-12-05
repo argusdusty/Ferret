@@ -22,7 +22,6 @@ func main() {
 	ExampleInvertedSuffix := ferret.MakeInvertedSuffix(ExampleDictionary, ExampleConversion, 5)
 	fmt.Println(ExampleInvertedSuffix.Query([]byte("test"), false, make([]byte, 0)))
 	fmt.Println(ExampleInvertedSuffix.Query([]byte("a"), false, make([]byte, 0)))
-	fmt.Println(ExampleInvertedSuffix.PrefixQuery("a"))
 	fmt.Println(ExampleInvertedSuffix.Query([]byte("ar"), false, make([]byte, 0)))
 	fmt.Println(ExampleInvertedSuffix.Query([]byte("tsst"), true, ferret.LowercaseASCII))
 }
