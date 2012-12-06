@@ -242,8 +242,8 @@ func (LSIS LengthSortedInvertedSuffix) Query(Query string, ResultsLimit, LengthL
 	}
 	Results := make([]string, 0)
 	for i := n; i < LengthLimit; i++ {
-		if _, ok := LSIS[n]; !ok { continue }
-		IS := LSIS[n]
+		if _, ok := LSIS[i]; !ok { continue }
+		IS := LSIS[i]
 		Results = append(Results, IS.Query(Query, ResultsLimit, true, false, make([]byte, 0))...)
 		n := len(Results)
 		if n == ResultsLimit { return Results }
