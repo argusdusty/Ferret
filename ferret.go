@@ -5,12 +5,12 @@ import (
 )
 
 type InvertedSuffix struct {
-	WordIndex []int // WordIndex and SuffixIndex are sorted by S.Words[S.WordIndex[i]][S.SuffixIndex[i]:]
+	WordIndex []int // WordIndex and SuffixIndex are sorted by Words[LengthIndex[i]][WordIndex[i]][SuffixIndex[i]:]
 	SuffixIndex []int
-	Words [][]byte // Unsorted list of []byte-converted dictionary words
-	Lengths []int // Caching for performance. IS.Lengths[i] == len(IS.Words[i])
-	OrigWords []string // Original value of []byte-converted words
-	ResultsLimit int // Set to -1 for no results limit
+	Words [][]byte // Words[i] = Conversion(Dictionary[i])
+	Lengths []int // Lengths[i] == len(Words[i])
+	Dictionary []string
+	Conversion func(string) []byte
 }
 
 func (IS *InvertedSuffix) Swap(i, j int) {
@@ -41,34 +41,34 @@ func (IS *InvertedSuffix) Less(i, j int) bool {
 }
 
 // Creates an inverted suffix from a dictionary of strings
-func MakeInvertedSuffix(Words []string, Conversion func(string) []byte, ResultsLimit int) *InvertedSuffix {
+func MakeInvertedSuffix(Dictionary []string, Conversion func(string) []byte) *InvertedSuffix {
 	WordIndex := make([]int, 0)
 	SuffixIndex := make([]int, 0)
-	NewWords := make([][]byte, 0)
+	Words := make([][]byte, 0)
 	Lengths := make([]int, 0)
-	for i, Word := range(Words) {
+	for i, Word := range(Dictionary) {
 		ByteWord := Conversion(Word); N := len(ByteWord)
 		for j := 0; j < N; j++ {
 			WordIndex = append(WordIndex, i)
 			SuffixIndex = append(SuffixIndex, j)
 		}
-		NewWords = append(NewWords, ByteWord)
+		Words = append(Words, ByteWord)
 		Lengths = append(Lengths, N)
 	}
-	Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, NewWords, Lengths, Words, ResultsLimit}
+	Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, Words, Lengths, Dictionary, Conversion}
 	sort.Sort(Suffixes)
 	return Suffixes
 }
 
 // Adds a word to the dictionary that IS was built on.
 // This is pretty slow, so stick to MakeInvertedSuffix when you can
-func (IS *InvertedSuffix) Insert(Word string, Conversion func(string) []byte) {
+func (IS *InvertedSuffix) Insert(Word string) {
 	i := len(IS.Words)
-	ByteWord := Conversion(Word)
+	ByteWord := IS.Conversion(Word)
 	IS.Words = append(IS.Words, ByteWord)
 	Length := len(ByteWord)
 	IS.Lengths = append(IS.Lengths, Length)
-	IS.OrigWords = append(IS.OrigWords, Word)
+	IS.Dictionary = append(IS.Dictionary, Word)
 	for j := 0; j < Length; j++ {
 		k := sort.Search(IS.Len(), func(h int) bool {
 			y := IS.WordIndex[h]
@@ -90,7 +90,7 @@ func (IS *InvertedSuffix) Insert(Word string, Conversion func(string) []byte) {
 }
 
 // Performs an exact substring search for the query in the word dictionary
-// Returns the boundaries of sorted suffixes which match have the query as a prefix
+// Returns the boundaries (low/high) of sorted suffixes which have the query as a prefix
 func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 	low := 0; high := IS.Len(); n := len(Query)
 	for a := 0; a < n; a++ {
@@ -141,44 +141,112 @@ func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 }
 
 // Returns the strings which contain the query
-func (IS *InvertedSuffix) Query(Query []byte, FaultTolerance bool, AllowedBytes []byte) []string {
+// Sorted by size of results (smallest first)
+// Input:
+//     Query: The substring to search for. Will be converted to []byte with SE.Conversion
+//     ResultsLimit: Limit the results so you don't return your whol dictionary by accident. Set to -1 for no limit
+//     Unsorted: Whether or not the results should be sorted by length.
+//     FaultTolerance: Will correct errors (Levenshtein distance 1) in the Query
+//     AllowedBytes: The bytes to allow in error correction (ignore this if FaultTolerance is false)
+func (IS *InvertedSuffix) Query(Query string, ResultsLimit int, Unsorted, FaultTolerance bool, AllowedBytes []byte) []string {
+	Data := IS.Conversion(Query)
 	Values := make([]int, 0); Results := make([]string, 0); n := len(Query)
-	low, high := IS.Search(Query)
-	a := 0; used := make(map[int]bool, 0); Limit := IS.ResultsLimit
+	low, high := IS.Search(Data)
+	a := 0; used := make(map[int]bool, 0); Limit := ResultsLimit
 	for k := low; k < high; k++ {
 		x := IS.WordIndex[k]
 		if _, ok := used[x]; ok { continue }
 		used[x] = true
 		z := IS.Lengths[x]
-		w := IS.OrigWords[x]
-		i := sort.Search(a, func(h int) bool { return Values[h] > z })
-		Values = append(Values[:i], append([]int{z}, Values[i:]...)...)
-		Results = append(Results[:i], append([]string{w}, Results[i:]...)...)
-		if a == Limit {
-			Values = Values[:a]; Results = Results[:a]
+		w := IS.Dictionary[x]
+		if Unsorted {
+			Results = append(Results, w); a++
+			if a == Limit { return Results }
 		} else {
-			a++
+			i := sort.Search(a, func(h int) bool { return Values[h] > z })
+			Results = append(Results[:i], append([]string{w}, Results[i:]...)...)
+			Values = append(Values[:i], append([]int{z}, Values[i:]...)...)
+			if a == Limit {
+				Values = Values[:a]; Results = Results[:a]
+			} else {
+				a++
+			}
 		}
 	}
 	if FaultTolerance && a == 0 && n < 20 {
-		for _, q := range(ErrorCorrect(Query, AllowedBytes)) {
+		for _, q := range(ErrorCorrect(Data, AllowedBytes)) {
 			low, high := IS.Search(q)
 			for k := low; k < high; k++ {
 				x := IS.WordIndex[k]
 				if _, ok := used[x]; ok { continue }
 				used[x] = true
 				z := IS.Lengths[x]
-				w := IS.OrigWords[x]
-				i := sort.Search(a, func(h int) bool { return Values[h] > z })
-				Values = append(Values[:i], append([]int{z}, Values[i:]...)...)
-				Results = append(Results[:i], append([]string{w}, Results[i:]...)...)
-				if a == Limit {
-					Values = Values[:a]; Results = Results[:a]
+				w := IS.Dictionary[x]
+				if Unsorted {
+					Results = append(Results, w); a++
+					if a == Limit { return Results }
 				} else {
-					a++
+					i := sort.Search(a, func(h int) bool { return Values[h] > z })
+					Results = append(Results[:i], append([]string{w}, Results[i:]...)...)
+					Values = append(Values[:i], append([]int{z}, Values[i:]...)...)
+					if a == Limit {
+						Values = Values[:a]; Results = Results[:a]
+					} else {
+						a++
+					}
 				}
 			}
 		}
+	}
+	return Results
+}
+
+type LengthSortedInvertedSuffix map[int]*InvertedSuffix
+
+func MakeLengthSortedInvertedSuffix(Dictionary []string, Conversion func(string) []byte) LengthSortedInvertedSuffix {
+	LSIS := make(LengthSortedInvertedSuffix, 0)
+	Wordss := make(map[int][][]byte, 0)
+	Dictionaries := make(map[int][]string, 0)
+	for _, Word := range(Dictionary) {
+		ByteWord := Conversion(Word); N := len(ByteWord)
+		if _, ok := Wordss[N]; !ok { Wordss[N] = make([][]byte, 0); Dictionaries[N] = make([]string, 0) }
+		Wordss[N] = append(Wordss[N], ByteWord)
+		Dictionaries[N] = append(Dictionaries[N], Word)
+	}
+	for n, Words := range(Wordss) {
+		WordIndex := make([]int, 0)
+		SuffixIndex := make([]int, 0)
+		Lengths := make([]int, 0)
+		for i, ByteWord := range(Words) {
+			N := len(ByteWord)
+			for j := 0; j < N; j++ {
+				WordIndex = append(WordIndex, i)
+				SuffixIndex = append(SuffixIndex, j)
+			}
+			Words = append(Words, ByteWord)
+			Lengths = append(Lengths, N)
+		}
+		Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, Words, Lengths, Dictionaries[n], Conversion}
+		sort.Sort(Suffixes)
+		LSIS[n] = Suffixes
+	}
+	return LSIS
+}
+
+func (LSIS LengthSortedInvertedSuffix) Query(Query string, ResultsLimit, LengthLimit int) []string {
+	if len(LSIS ) == 0 { return make([]string, 0) }
+	n := 0
+	for _, IS := range(LSIS) {
+		n = len(IS.Conversion(Query))
+		break
+	}
+	Results := make([]string, 0)
+	for i, IS := range(LSIS) {
+		if i < n || i >= LengthLimit { continue }
+		Results = append(Results, IS.Query(Query, ResultsLimit, true, false, make([]byte, 0))...)
+		n := len(Results)
+		if n == ResultsLimit { return Results }
+		if n > ResultsLimit { return Results[:ResultsLimit] }
 	}
 	return Results
 }
