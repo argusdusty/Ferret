@@ -13,8 +13,9 @@ To try the examples: go build example.go && go build dictionaryexample.go
 
 Check out example.go and dictionaryexample.go for example usage. The code is meant to be as fast as possible for a substring dictionary search, and as such is best suited for large dictionaries with >1,000,000 total characters. I've timed 20s initialization for 3.5 million characters on a modern CPU (350,000 entries), and 200us search time (3ms with error-correction).
 
-
-Approximate Running Times:
+Running Times:
+	InvertedSuffix generation: Theta(n*log(n))
+	LengthSortedInvertedSuffix generation: O(m*log(n)), Omega(k*log(n/k))
 	InvertedSuffix Unsorted lookup: O(m*log(n)), Omega(log(n))
 	InvertedSuffix Sorted lookup: O(m*log(n)+k*log(r)), Omega(log(n))
 	InvertedSuffix Error-correcting Unsorted lookup: O(m^2*c*log(n)+r), Omega(m*c*log(n))
@@ -26,4 +27,3 @@ Approximate Running Times:
 		k = len(Dictionary) (words in dictionary)
 		r = ResultsLimit
 		c = len(ErrorCorrection(Query))/m
-		d = n/k
