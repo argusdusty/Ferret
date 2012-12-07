@@ -251,11 +251,15 @@ func MakeLengthSortedInvertedSuffix(Dictionary []string, Conversion func(string)
 	Wordss := make(map[int][][]byte, 0)
 	Dictionaries := make(map[int][]string, 0)
 	for _, Word := range(Dictionary) {
-		ByteWord := Conversion(Word); N := len(ByteWord)
-		if _, ok := Wordss[N]; !ok { Wordss[N] = make([][]byte, 0); Dictionaries[N] = make([]string, 0) }
+		ByteWord := Conversion(Word)
+		N := len(ByteWord)
+		if _, ok := Wordss[N]; !ok {
+			Lengths = append(Lengths, N)
+			Wordss[N] = make([][]byte, 0)
+			Dictionaries[N] = make([]string, 0)
+		}
 		Wordss[N] = append(Wordss[N], ByteWord)
 		Dictionaries[N] = append(Dictionaries[N], Word)
-		Lengths = append(Lengths, N)
 	}
 	sort.Ints(Lengths)
 	for n, Words := range(Wordss) {
@@ -275,6 +279,26 @@ func MakeLengthSortedInvertedSuffix(Dictionary []string, Conversion func(string)
 		Data[n] = Suffixes
 	}
 	return LengthSortedInvertedSuffix{Lengths, Conversion, Data}
+}
+
+func (LSIS LengthSortedInvertedSuffix) Insert(Word string) {
+	ByteWord := LSIS.Conversion(Word)
+	N := len(ByteWord)
+	if _, ok := LSIS.Data[N]; !ok {
+		Words := [][]byte{ByteWord}
+		Dictionary := []string{Word}
+		LSIS.Lengths := append(LSIS.Lengths, N)
+		WordIndex := make([]int, 0); SuffixIndex := make([]int, 0)
+		for j := 0; j < n; j++ {
+			WordIndex = append(WordIndex, i)
+			SuffixIndex = append(SuffixIndex, j)
+		}
+		Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, Words, []int{N}, Dictionary, Conversion}
+		sort.Sort(Suffixes)
+		LSIS.Data[N] = Suffixes
+	} else {
+		LSIS.Data[N].Insert(Word)
+	}
 }
 
 func (LSIS LengthSortedInvertedSuffix) Query(Query string, ResultsLimit int) []string {
