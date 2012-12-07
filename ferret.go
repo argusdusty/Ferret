@@ -146,11 +146,9 @@ func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 //     Query: The substring to search for. Will be converted to []byte with SE.Conversion
 //     ResultsLimit: Limit the results so you don't return your whol dictionary by accident. Set to -1 for no limit
 //     Unsorted: Whether or not the results should be sorted by length.
-//     FaultTolerance: Will correct errors (Levenshtein distance 1) in the Query
-//     AllowedBytes: The bytes to allow in error correction (ignore this if FaultTolerance is false)
-func (IS *InvertedSuffix) Query(Query string, ResultsLimit int, Unsorted, FaultTolerance bool, AllowedBytes []byte) []string {
+func (IS *InvertedSuffix) Query(Query string, ResultsLimit int, Unsorted bool) []string {
 	Data := IS.Conversion(Query)
-	Values := make([]int, 0); Results := make([]string, 0); n := len(Query)
+	Values := make([]int, 0); Results := make([]string, 0)
 	low, high := IS.Search(Data)
 	a := 0; used := make(map[int]bool, 0); Limit := ResultsLimit
 	for k := low; k < high; k++ {
@@ -173,8 +171,45 @@ func (IS *InvertedSuffix) Query(Query string, ResultsLimit int, Unsorted, FaultT
 			}
 		}
 	}
-	if FaultTolerance && a == 0 && n < 20 {
-		for _, q := range(ErrorCorrect(Data, AllowedBytes)) {
+	return Results
+}
+
+// Returns the strings which contain the query
+// Sorted by size of results (smallest first)
+// Will search for all substrings defined by ErrorCorrection
+// if no results are found on the initial query
+// Input:
+//     Query: The substring to search for. Will be converted to []byte with SE.Conversion
+//     ResultsLimit: Limit the results so you don't return your whol dictionary by accident. Set to -1 for no limit
+//     Unsorted: Whether or not the results should be sorted by length.
+//     ErrorCorrection: Returns a list of alternate
+func (IS *InvertedSuffix) ErrorCorrectingQuery(Query string, ResultsLimit int, Unsorted bool, ErrorCorrection func([]byte) [][]byte) []string {
+	Data := IS.Conversion(Query)
+	Values := make([]int, 0); Results := make([]string, 0)
+	low, high := IS.Search(Data)
+	a := 0; used := make(map[int]bool, 0); Limit := ResultsLimit
+	for k := low; k < high; k++ {
+		x := IS.WordIndex[k]
+		if _, ok := used[x]; ok { continue }
+		used[x] = true
+		z := IS.Lengths[x]
+		w := IS.Dictionary[x]
+		if Unsorted {
+			Results = append(Results, w); a++
+			if a == Limit { return Results }
+		} else {
+			i := sort.Search(a, func(h int) bool { return Values[h] > z })
+			Results = append(Results[:i], append([]string{w}, Results[i:]...)...)
+			Values = append(Values[:i], append([]int{z}, Values[i:]...)...)
+			if a == Limit {
+				Values = Values[:a]; Results = Results[:a]
+			} else {
+				a++
+			}
+		}
+	}
+	if a == 0 {
+		for _, q := range(ErrorCorrection(Data)) {
 			low, high := IS.Search(q)
 			for k := low; k < high; k++ {
 				x := IS.WordIndex[k]
@@ -201,10 +236,18 @@ func (IS *InvertedSuffix) Query(Query string, ResultsLimit int, Unsorted, FaultT
 	return Results
 }
 
-type LengthSortedInvertedSuffix map[int]*InvertedSuffix
+// A variant of the InvertedSuffix, which splits the InvertedSuffixes by length
+// This allows for faster length-sorted searches on most dictionaries
+// It doesn't support error-correction, however
+type LengthSortedInvertedSuffix struct {
+	Lengths []int // Sorted index for Data. Data[Lengths[0]] represents the dictionary with the shortest length words
+	Conversion func(string) []byte
+	Data map[int]*InvertedSuffix
+}
 
 func MakeLengthSortedInvertedSuffix(Dictionary []string, Conversion func(string) []byte) LengthSortedInvertedSuffix {
-	LSIS := make(LengthSortedInvertedSuffix, 0)
+	Data := make(map[int]*InvertedSuffix, 0)
+	Lengths := make([]int, 0)
 	Wordss := make(map[int][][]byte, 0)
 	Dictionaries := make(map[int][]string, 0)
 	for _, Word := range(Dictionary) {
@@ -212,39 +255,38 @@ func MakeLengthSortedInvertedSuffix(Dictionary []string, Conversion func(string)
 		if _, ok := Wordss[N]; !ok { Wordss[N] = make([][]byte, 0); Dictionaries[N] = make([]string, 0) }
 		Wordss[N] = append(Wordss[N], ByteWord)
 		Dictionaries[N] = append(Dictionaries[N], Word)
+		Lengths = append(Lengths, N)
 	}
+	sort.Ints(Lengths)
 	for n, Words := range(Wordss) {
 		WordIndex := make([]int, 0)
 		SuffixIndex := make([]int, 0)
-		Lengths := make([]int, 0)
+		ISLengths := make([]int, 0)
 		for i, ByteWord := range(Words) {
-			N := len(ByteWord)
-			for j := 0; j < N; j++ {
+			for j := 0; j < n; j++ {
 				WordIndex = append(WordIndex, i)
 				SuffixIndex = append(SuffixIndex, j)
 			}
 			Words = append(Words, ByteWord)
-			Lengths = append(Lengths, N)
+			ISLengths = append(ISLengths, n)
 		}
-		Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, Words, Lengths, Dictionaries[n], Conversion}
+		Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, Words, ISLengths, Dictionaries[n], Conversion}
 		sort.Sort(Suffixes)
-		LSIS[n] = Suffixes
+		Data[n] = Suffixes
 	}
-	return LSIS
+	return LengthSortedInvertedSuffix{Lengths, Conversion, Data}
 }
 
-func (LSIS LengthSortedInvertedSuffix) Query(Query string, ResultsLimit, LengthLimit int) []string {
-	if len(LSIS ) == 0 { return make([]string, 0) }
-	n := 0
-	for _, IS := range(LSIS) {
-		n = len(IS.Conversion(Query))
-		break
-	}
+func (LSIS LengthSortedInvertedSuffix) Query(Query string, ResultsLimit int) []string {
+	if len(LSIS.Lengths) == 0 { return make([]string, 0) }
+	n := len(LSIS.Conversion(Query))
 	Results := make([]string, 0)
-	for i := n; i < LengthLimit; i++ {
-		if _, ok := LSIS[i]; !ok { continue }
-		IS := LSIS[i]
-		Results = append(Results, IS.Query(Query, ResultsLimit, true, false, make([]byte, 0))...)
+	i := sort.SearchInts(LSIS.Lengths, n)
+	Limit := len(LSIS.Lengths)
+	for ; i < Limit; i++ {
+		IS, ok := LSIS.Data[LSIS.Lengths[i]]
+		if !ok { continue } // Should never happen, but it's better to be safe
+		Results = append(Results, IS.Query(Query, ResultsLimit, true)...)
 		n := len(Results)
 		if n == ResultsLimit { return Results }
 		if n > ResultsLimit { return Results[:ResultsLimit] }
