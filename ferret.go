@@ -287,13 +287,13 @@ func (LSIS LengthSortedInvertedSuffix) Insert(Word string) {
 	if _, ok := LSIS.Data[N]; !ok {
 		Words := [][]byte{ByteWord}
 		Dictionary := []string{Word}
-		LSIS.Lengths := append(LSIS.Lengths, N)
+		LSIS.Lengths = append(LSIS.Lengths, N)
 		WordIndex := make([]int, 0); SuffixIndex := make([]int, 0)
-		for j := 0; j < n; j++ {
-			WordIndex = append(WordIndex, i)
+		for j := 0; j < N; j++ {
+			WordIndex = append(WordIndex, 0)
 			SuffixIndex = append(SuffixIndex, j)
 		}
-		Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, Words, []int{N}, Dictionary, Conversion}
+		Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, Words, []int{N}, Dictionary, LSIS.Conversion}
 		sort.Sort(Suffixes)
 		LSIS.Data[N] = Suffixes
 	} else {
