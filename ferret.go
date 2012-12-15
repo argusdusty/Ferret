@@ -244,7 +244,7 @@ type LengthSortedInvertedSuffix struct {
 	Data map[int]*InvertedSuffix
 }
 
-func MakeLengthSortedInvertedSuffix(Dictionary []string, Conversion func(string) []byte) LengthSortedInvertedSuffix {
+func MakeLengthSortedInvertedSuffix(Dictionary []string, Conversion func(string) []byte) *LengthSortedInvertedSuffix {
 	Data := make(map[int]*InvertedSuffix, 0)
 	Lengths := make([]int, 0)
 	Wordss := make(map[int][][]byte, 0)
@@ -277,10 +277,10 @@ func MakeLengthSortedInvertedSuffix(Dictionary []string, Conversion func(string)
 		sort.Sort(Suffixes)
 		Data[n] = Suffixes
 	}
-	return LengthSortedInvertedSuffix{Lengths, Conversion, Data}
+	return &LengthSortedInvertedSuffix{Lengths, Conversion, Data}
 }
 
-func (LSIS LengthSortedInvertedSuffix) Insert(Word string) {
+func (LSIS *LengthSortedInvertedSuffix) Insert(Word string) {
 	ByteWord := LSIS.Conversion(Word)
 	N := len(ByteWord)
 	if _, ok := LSIS.Data[N]; !ok {
@@ -301,7 +301,7 @@ func (LSIS LengthSortedInvertedSuffix) Insert(Word string) {
 	}
 }
 
-func (LSIS LengthSortedInvertedSuffix) Query(Query string, ResultsLimit int) []string {
+func (LSIS *LengthSortedInvertedSuffix) Query(Query string, ResultsLimit int) []string {
 	if len(LSIS.Lengths) == 0 { return make([]string, 0) }
 	Data := LSIS.Conversion(Query)
 	Results := make([]string, 0)
@@ -323,7 +323,7 @@ func (LSIS LengthSortedInvertedSuffix) Query(Query string, ResultsLimit int) []s
 	return Results
 }
 
-func (LSIS LengthSortedInvertedSuffix) ErrorCorrectingQuery(Query string, ResultsLimit int, ErrorCorrection func([]byte) [][]byte) []string {
+func (LSIS *LengthSortedInvertedSuffix) ErrorCorrectingQuery(Query string, ResultsLimit int, ErrorCorrection func([]byte) [][]byte) []string {
 	if len(LSIS.Lengths) == 0 { return make([]string, 0) }
 	Data := LSIS.Conversion(Query)
 	Results := make([]string, 0)

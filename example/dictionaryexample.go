@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/argusdusty/ferret"
 	"time"
+	"sort"
 )
 
 var Conversion = func(s string) []byte { return []byte(s) }
@@ -22,6 +23,7 @@ func main() {
 		Dictionary = append(Dictionary, string(Word))
 	}
 	fmt.Println("Loaded dictionary in:", time.Now().Sub(t)); t = time.Now()
+
 	InvertedSuffix := ferret.MakeInvertedSuffix(Dictionary, Conversion)
 	fmt.Println("Created index in:", time.Now().Sub(t)); t = time.Now()
 	fmt.Println(InvertedSuffix.Query("ar", 5, false))
@@ -55,7 +57,7 @@ func main() {
 	fmt.Println("Performed search in:", time.Now().Sub(t)); t = time.Now()
 	fmt.Println(LSIS.Query("the", 25))
 	fmt.Println("Performed search in:", time.Now().Sub(t)); t = time.Now()
-	LSIS.Insert("asdfghjklqwertyuiopzxcvbnm")
+	LSIS.Insert( "asdfghjklqwertyuiopzxcvbnm")
 	fmt.Println("Performed insert in:", time.Now().Sub(t)); t = time.Now()
 	fmt.Println(LSIS.Query("sdfghjklqwert", 5))
 	fmt.Println("Performed search in:", time.Now().Sub(t)); t = time.Now()
