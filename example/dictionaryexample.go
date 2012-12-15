@@ -57,7 +57,7 @@ func main() {
 	fmt.Println("Performed search in:", time.Now().Sub(t)); t = time.Now()
 	fmt.Println(LSIS.Query("the", 25))
 	fmt.Println("Performed search in:", time.Now().Sub(t)); t = time.Now()
-	LSIS.Insert( "asdfghjklqwertyuiopzxcvbnm")
+	LSIS.Insert("asdfghjklqwertyuiopzxcvbnm")
 	fmt.Println("Performed insert in:", time.Now().Sub(t)); t = time.Now()
 	fmt.Println(LSIS.Query("sdfghjklqwert", 5))
 	fmt.Println("Performed search in:", time.Now().Sub(t)); t = time.Now()
