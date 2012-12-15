@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/argusdusty/ferret"
 	"time"
-	"sort"
 )
 
 var Conversion = func(s string) []byte { return []byte(s) }
