@@ -15,7 +15,7 @@ Check out example.go and dictionaryexample.go for example usage. The code is mea
 
 Running Times:
 	InvertedSuffix generation: Theta(n*log(n))
-	LengthSortedInvertedSuffix generation: O(m*log(n)), Omega(k*log(n/k))
+	LengthSortedInvertedSuffix generation: O(n*log(n)), Omega(k*log(n/k))
 	InvertedSuffix Unsorted lookup: O(m*log(n)), Omega(log(n))
 	InvertedSuffix Sorted lookup: O(m*log(n)+k*log(r)), Omega(log(n))
 	InvertedSuffix Error-correcting Unsorted lookup: O(m^2*c*log(n)+r), Omega(m*c*log(n))
