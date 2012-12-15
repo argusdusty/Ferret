@@ -16,7 +16,6 @@ var ExampleDictionary = []string{
 	"dvorak",
 	"ferret",
 }
-
 var ExampleCorrection = func(b []byte) [][]byte { return ferret.ErrorCorrect(b, ferret.LowercaseASCII) }
 
 func main() {
@@ -27,4 +26,6 @@ func main() {
 	fmt.Println(ExampleInvertedSuffix.ErrorCorrectingQuery("tsst", 5, false, ExampleCorrection))
 	fmt.Println(ExampleInvertedSuffix.Query("a", 5, true))
 	fmt.Println(ExampleInvertedSuffix.Query("a", 5, false))
+	ExampleInvertedSuffix.Insert("asdfghjklqwertyuiopzxcvbnm")
+	fmt.Println(ExampleInvertedSuffix.Query("sdfghjklqwert", 5, false))
 }

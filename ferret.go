@@ -72,8 +72,8 @@ func (IS *InvertedSuffix) Insert(Word string) {
 	for j := 0; j < Length; j++ {
 		k := sort.Search(IS.Len(), func(h int) bool {
 			y := IS.WordIndex[h]
-			a := Word; b := IS.Words[y]
-			pa := j; pb := IS.SuffixIndex[j]
+			a := ByteWord; b := IS.Words[y]
+			pa := j; pb := IS.SuffixIndex[h]
 			na := Length; nb := IS.Lengths[y]
 			for pa < na && pb < nb {
 				wa := a[pa]; wb := b[pb]
@@ -286,7 +286,8 @@ func (LSIS LengthSortedInvertedSuffix) Insert(Word string) {
 	if _, ok := LSIS.Data[N]; !ok {
 		Words := [][]byte{ByteWord}
 		Dictionary := []string{Word}
-		LSIS.Lengths = append(LSIS.Lengths, N)
+		i := sort.SearchInts(LSIS.Lengths, N)
+		LSIS.Lengths = append(LSIS.Lengths[:i], append([]int{N}, LSIS.Lengths[i:]...)...)
 		WordIndex := make([]int, 0); SuffixIndex := make([]int, 0)
 		for j := 0; j < N; j++ {
 			WordIndex = append(WordIndex, 0)
@@ -342,8 +343,9 @@ func (LSIS LengthSortedInvertedSuffix) ErrorCorrectingQuery(Query string, Result
 		}
 	}
 	if a == 0 {
-		for _, q := range(ErrorCorrection(Data)) {
-			for i := sort.SearchInts(LSIS.Lengths, len(q)); i < Limit; i++ {
+		for i := sort.SearchInts(LSIS.Lengths, len(Data) - 1); i < Limit; i++ {
+			for _, q := range(ErrorCorrection(Data)) {
+				if LSIS.Lengths[i] < len(q) { continue }
 				IS, ok := LSIS.Data[LSIS.Lengths[i]]
 				if !ok { continue }
 				low, high := IS.Search(q)
