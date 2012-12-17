@@ -48,25 +48,31 @@ func ErrorCorrect(Word []byte, AllowedBytes []byte) [][]byte {
 	for i := 0; i < N; i++ {
 		t := Word[i]
 		// Remove Character
-		temp := make([]byte, N); copy(temp, Word)
+		temp := make([]byte, N)
+		copy(temp, Word)
 		temp = append(temp[:i], temp[i+1:]...)
 		results = append(results, temp)
 		if i != 0 {
 			// Add Character
-			for _, c := range(AllowedBytes) {
-				temp := make([]byte, N); copy(temp, Word)
+			for _, c := range AllowedBytes {
+				temp := make([]byte, N)
+				copy(temp, Word)
 				temp = append(temp[:i], append([]byte{c}, temp[i:]...)...)
 				results = append(results, temp)
 			}
 			// Transpose Character
-			temp := make([]byte, N); copy(temp, Word)
-			temp[i], temp[i - 1] = temp[i - 1], temp[i]
+			temp := make([]byte, N)
+			copy(temp, Word)
+			temp[i], temp[i-1] = temp[i-1], temp[i]
 			results = append(results, temp)
 		}
 		// Insert Character
-		for _, c := range(AllowedBytes) {
-			if c == t { continue }
-			temp := make([]byte, N); copy(temp, Word)
+		for _, c := range AllowedBytes {
+			if c == t {
+				continue
+			}
+			temp := make([]byte, N)
+			copy(temp, Word)
 			temp[i] = c
 			results = append(results, temp)
 		}
