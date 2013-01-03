@@ -22,12 +22,12 @@ var ExampleConversion = func(s string) []byte { return []byte(s) }
 
 func main() {
 	ExampleInvertedSuffix := ferret.MakeInvertedSuffix(ExampleDictionary, ExampleConversion)
-	fmt.Println(ExampleInvertedSuffix.Query("ar", 5, false))
-	fmt.Println(ExampleInvertedSuffix.Query("test", 5, false))
-	fmt.Println(ExampleInvertedSuffix.ErrorCorrectingQuery("tsst", 5, false, ExampleCorrection))
-	fmt.Println(ExampleInvertedSuffix.SortedErrorCorrectingQuery("tsst", 5, false, ExampleCorrection, ExampleSorter))
+	fmt.Println(ExampleInvertedSuffix.Query("ar", 5))
+	fmt.Println(ExampleInvertedSuffix.Query("test", 5))
+	fmt.Println(ExampleInvertedSuffix.ErrorCorrectingQuery("tsst", 5, ExampleCorrection))
+	fmt.Println(ExampleInvertedSuffix.SortedErrorCorrectingQuery("tsst", 5, ExampleCorrection, ExampleSorter))
 	fmt.Println(ExampleInvertedSuffix.SortedQuery("a", 5, ExampleSorter))
-	fmt.Println(ExampleInvertedSuffix.Query("a", 5, false))
+	fmt.Println(ExampleInvertedSuffix.Query("a", 5))
 	ExampleInvertedSuffix.Insert("asdfghjklqwertyuiopzxcvbnm")
-	fmt.Println(ExampleInvertedSuffix.Query("sdfghjklqwert", 5, false))
+	fmt.Println(ExampleInvertedSuffix.Query("sdfghjklqwert", 5))
 }

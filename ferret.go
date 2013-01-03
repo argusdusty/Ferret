@@ -220,25 +220,30 @@ func (IS *InvertedSuffix) SortedQuery(Query string, ResultsLimit int, Sorter fun
 		used[x] = true
 		w := IS.Dictionary[x]
 		v := Sorter(w)
-		if a == ResultsLimit {
-			i := 0
-			j := a
-			for i < j {
-				h := (i + j) >> 1
-				if Values[h] > v {
-					i = h + 1
-				} else {
-					j = h
-				}
+		i := 0
+		j := a
+		for i < j {
+			h := (i + j) >> 1
+			if Values[h] > v {
+				i = h + 1
+			} else {
+				j = h
 			}
+		}
+		if a == ResultsLimit {
 			if i < a {
 				Values = append(Values[:i], append([]float64{v}, Values[i:a-1]...)...)
 				Results = append(Results[:i], append([]string{w}, Results[i:a-1]...)...)
 			}
 		} else {
 			a++
-			Values = append(Values, v)
-			Results = append(Results, w)
+			if i < a {
+				Values = append(Values[:i], append([]float64{v}, Values[i:]...)...)
+				Results = append(Results[:i], append([]string{w}, Results[i:]...)...)
+			} else {
+				Values = append(Values, v)
+				Results = append(Results, w)
+			}
 		}
 	}
 	return Results
@@ -315,25 +320,30 @@ func (IS *InvertedSuffix) SortedErrorCorrectingQuery(Query string, ResultsLimit 
 		used[x] = true
 		w := IS.Dictionary[x]
 		v := Sorter(w)
-		if a == ResultsLimit {
-			i := 0
-			j := a
-			for i < j {
-				h := (i + j) >> 1
-				if Values[h] > v {
-					i = h + 1
-				} else {
-					j = h
-				}
+		i := 0
+		j := a
+		for i < j {
+			h := (i + j) >> 1
+			if Values[h] > v {
+				i = h + 1
+			} else {
+				j = h
 			}
+		}
+		if a == ResultsLimit {
 			if i < a {
 				Values = append(Values[:i], append([]float64{v}, Values[i:a-1]...)...)
 				Results = append(Results[:i], append([]string{w}, Results[i:a-1]...)...)
 			}
 		} else {
 			a++
-			Values = append(Values, v)
-			Results = append(Results, w)
+			if i < a {
+				Values = append(Values[:i], append([]float64{v}, Values[i:]...)...)
+				Results = append(Results[:i], append([]string{w}, Results[i:]...)...)
+			} else {
+				Values = append(Values, v)
+				Results = append(Results, w)
+			}
 		}
 	}
 	if a == 0 {
@@ -347,25 +357,30 @@ func (IS *InvertedSuffix) SortedErrorCorrectingQuery(Query string, ResultsLimit 
 				used[x] = true
 				w := IS.Dictionary[x]
 				v := Sorter(w)
-				if a == ResultsLimit {
-					i := 0
-					j := a
-					for i < j {
-						h := (i + j) >> 1
-						if Values[h] > v {
-							i = h + 1
-						} else {
-							j = h
-						}
+				i := 0
+				j := a
+				for i < j {
+					h := (i + j) >> 1
+					if Values[h] > v {
+						i = h + 1
+					} else {
+						j = h
 					}
+				}
+				if a == ResultsLimit {
 					if i < a {
 						Values = append(Values[:i], append([]float64{v}, Values[i:a-1]...)...)
 						Results = append(Results[:i], append([]string{w}, Results[i:a-1]...)...)
 					}
 				} else {
 					a++
-					Values = append(Values, v)
-					Results = append(Results, w)
+					if i < a {
+						Values = append(Values[:i], append([]float64{v}, Values[i:]...)...)
+						Results = append(Results[:i], append([]string{w}, Results[i:]...)...)
+					} else {
+						Values = append(Values, v)
+						Results = append(Results, w)
+					}
 				}
 			}
 		}
@@ -373,34 +388,34 @@ func (IS *InvertedSuffix) SortedErrorCorrectingQuery(Query string, ResultsLimit 
 	return Results
 }
 
-// Disabled while I experiment with data structures
-/*
 // A variant of the InvertedSuffix, which splits the InvertedSuffixes by value
-// This allows for faster length-sorted searches on most dictionaries
+// This allows for faster sorted searches on most dictionaries
 type SortedInvertedSuffix struct {
-	Values     []int // Sorted index for Data. Data[Scores[0]] represents the dictionary with the largest score
+	Values     map[string]float64
 	Conversion func(string) []byte
 	Sorter     func(string) float64
+	Divisions  []float64
 	Data       map[int]*InvertedSuffix
 }
 
-func MakeLengthSortedInvertedSuffix(Dictionary []string, Conversion func(string) []byte) *LengthSortedInvertedSuffix {
+func MakeSortedInvertedSuffix(Dictionary []string, Conversion func(string) []byte, Sorter func(string) float64, Divisions []float64) *SortedInvertedSuffix {
+	sort.Float64s(Divisions)
 	Data := make(map[int]*InvertedSuffix, 0)
-	Values := make([]float64, 0)
+	Values := make(map[string]float64, 0)
 	Wordss := make(map[int][][]byte, 0)
 	Dictionaries := make(map[int][]string, 0)
 	for _, Word := range Dictionary {
 		ByteWord := Conversion(Word)
-		N := len(ByteWord)
+		x := Sorter(Word)
+		Values[Word] = x
+		N := sort.SearchFloat64s(Divisions, x)
 		if _, ok := Wordss[N]; !ok {
-			Lengths = append(Lengths, N)
 			Wordss[N] = make([][]byte, 0)
 			Dictionaries[N] = make([]string, 0)
 		}
 		Wordss[N] = append(Wordss[N], ByteWord)
 		Dictionaries[N] = append(Dictionaries[N], Word)
 	}
-	sort.Ints(Lengths)
 	for n, Words := range Wordss {
 		WordIndex := make([]int, 0)
 		SuffixIndex := make([]int, 0)
@@ -417,61 +432,64 @@ func MakeLengthSortedInvertedSuffix(Dictionary []string, Conversion func(string)
 		sort.Sort(Suffixes)
 		Data[n] = Suffixes
 	}
-	return &LengthSortedInvertedSuffix{Lengths, Conversion, Data}
+	return &SortedInvertedSuffix{Values, Conversion, Sorter, Divisions, Data}
 }
 
-func (LSIS *LengthSortedInvertedSuffix) Insert(Word string) {
-	ByteWord := LSIS.Conversion(Word)
+// Needs work
+/*
+func (SIS *SortedInvertedSuffix) Insert(Word string) {
+	ByteWord := SIS.Conversion(Word)
 	N := len(ByteWord)
-	if _, ok := LSIS.Data[N]; !ok {
+	if _, ok := SIS.Data[N]; !ok {
 		Words := [][]byte{ByteWord}
 		Dictionary := []string{Word}
 		i := 0
-		j := len(LSIS.Lengths)
+		j := len(SIS.Lengths)
 		for i < j {
 			h := i + (j-i)/2
-			if LSIS.Lengths[h] < N {
+			if SIS.Lengths[h] < N {
 				i = h + 1
 			} else {
 				j = h
 			}
 		}
-		LSIS.Lengths = append(LSIS.Lengths[:i], append([]int{N}, LSIS.Lengths[i:]...)...)
+		SIS.Lengths = append(SIS.Lengths[:i], append([]int{N}, SIS.Lengths[i:]...)...)
 		WordIndex := make([]int, 0)
 		SuffixIndex := make([]int, 0)
 		for j := 0; j < N; j++ {
 			WordIndex = append(WordIndex, 0)
 			SuffixIndex = append(SuffixIndex, j)
 		}
-		Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, Words, []int{N}, Dictionary, LSIS.Conversion}
+		Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, Words, []int{N}, Dictionary, SIS.Conversion}
 		sort.Sort(Suffixes)
-		LSIS.Data[N] = Suffixes
+		SIS.Data[N] = Suffixes
 	} else {
-		LSIS.Data[N].Insert(Word)
+		SIS.Data[N].Insert(Word)
 	}
 }
+*/
 
-func (LSIS *LengthSortedInvertedSuffix) Query(Query string, ResultsLimit int) []string {
-	if len(LSIS.Lengths) == 0 {
+func (SIS *SortedInvertedSuffix) Query(Query string, ResultsLimit int) []string {
+	if len(SIS.Divisions) == 0 {
 		return make([]string, 0)
 	}
-	Data := LSIS.Conversion(Query)
+	Data := SIS.Conversion(Query)
 	Results := make([]string, 0)
-	Limit := len(LSIS.Lengths)
+	Limit := len(SIS.Divisions)
 	a := 0
-	n := len(Data)
+	x := SIS.Sorter(Query)
 	i := 0
-	j := len(LSIS.Lengths)
+	j := Limit
 	for i < j {
 		h := i + (j-i)/2
-		if LSIS.Lengths[h] < n {
+		if SIS.Divisions[h] < x {
 			i = h + 1
 		} else {
 			j = h
 		}
 	}
 	for ; i < Limit; i++ {
-		IS, ok := LSIS.Data[LSIS.Lengths[i]]
+		IS, ok := SIS.Data[i]
 		if !ok {
 			continue
 		}
@@ -493,7 +511,9 @@ func (LSIS *LengthSortedInvertedSuffix) Query(Query string, ResultsLimit int) []
 	return Results
 }
 
-func (LSIS *LengthSortedInvertedSuffix) ErrorCorrectingQuery(Query string, ResultsLimit int, ErrorCorrection func([]byte) [][]byte) []string {
+// Needs work
+/*
+func (SIS *LengthSortedInvertedSuffix) ErrorCorrectingQuery(Query string, ResultsLimit int, ErrorCorrection func([]byte) [][]byte) []string {
 	if len(LSIS.Lengths) == 0 {
 		return make([]string, 0)
 	}
