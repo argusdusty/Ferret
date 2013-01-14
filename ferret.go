@@ -276,7 +276,7 @@ func (IS *InvertedSuffix) ErrorCorrectingQuery(Query string, ResultsLimit int, E
 			return Results
 		}
 	}
-	if a == 0 {
+	if a != ResultsLimit {
 		for _, q := range ErrorCorrection(Data) {
 			low, high := IS.Search(q)
 			for k := low; k < high; k++ {
@@ -408,7 +408,19 @@ func MakeSortedInvertedSuffix(Dictionary []string, Conversion func(string) []byt
 		ByteWord := Conversion(Word)
 		x := Sorter(Word)
 		Values[Word] = x
-		N := sort.SearchFloat64s(Divisions, x)
+		N := 0
+		j := len(Divisions)
+		for N < j {
+			h := (N + j) >> 1
+			if Divisions[h] < x {
+				N = h + 1
+			} else {
+				j = h
+			}
+		}
+		if N != 0 {
+			N -= 1
+		}
 		if _, ok := Wordss[N]; !ok {
 			Wordss[N] = make([][]byte, 0)
 			Dictionaries[N] = make([]string, 0)
@@ -416,79 +428,73 @@ func MakeSortedInvertedSuffix(Dictionary []string, Conversion func(string) []byt
 		Wordss[N] = append(Wordss[N], ByteWord)
 		Dictionaries[N] = append(Dictionaries[N], Word)
 	}
-	for n, Words := range Wordss {
+	for N, Words := range Wordss {
 		WordIndex := make([]int, 0)
 		SuffixIndex := make([]int, 0)
 		ISLengths := make([]int, 0)
 		for i, ByteWord := range Words {
-			for j := 0; j < n; j++ {
+			Length := len(ByteWord)
+			for j := 0; j < Length; j++ {
 				WordIndex = append(WordIndex, i)
 				SuffixIndex = append(SuffixIndex, j)
 			}
-			Words = append(Words, ByteWord)
-			ISLengths = append(ISLengths, n)
+			ISLengths = append(ISLengths, Length)
 		}
-		Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, Words, ISLengths, Dictionaries[n], Conversion}
+		Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, Words, ISLengths, Dictionaries[N], Conversion}
 		sort.Sort(Suffixes)
-		Data[n] = Suffixes
+		Data[N] = Suffixes
 	}
 	return &SortedInvertedSuffix{Values, Conversion, Sorter, Divisions, Data}
 }
 
-// Needs work
-/*
 func (SIS *SortedInvertedSuffix) Insert(Word string) {
-	ByteWord := SIS.Conversion(Word)
-	N := len(ByteWord)
-	if _, ok := SIS.Data[N]; !ok {
-		Words := [][]byte{ByteWord}
-		Dictionary := []string{Word}
-		i := 0
-		j := len(SIS.Lengths)
-		for i < j {
-			h := i + (j-i)/2
-			if SIS.Lengths[h] < N {
-				i = h + 1
-			} else {
-				j = h
-			}
-		}
-		SIS.Lengths = append(SIS.Lengths[:i], append([]int{N}, SIS.Lengths[i:]...)...)
-		WordIndex := make([]int, 0)
-		SuffixIndex := make([]int, 0)
-		for j := 0; j < N; j++ {
-			WordIndex = append(WordIndex, 0)
-			SuffixIndex = append(SuffixIndex, j)
-		}
-		Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, Words, []int{N}, Dictionary, SIS.Conversion}
-		sort.Sort(Suffixes)
-		SIS.Data[N] = Suffixes
-	} else {
-		SIS.Data[N].Insert(Word)
-	}
-}
-*/
-
-func (SIS *SortedInvertedSuffix) Query(Query string, ResultsLimit int) []string {
-	if len(SIS.Divisions) == 0 {
-		return make([]string, 0)
-	}
-	Data := SIS.Conversion(Query)
-	Results := make([]string, 0)
-	Limit := len(SIS.Divisions)
-	a := 0
-	x := SIS.Sorter(Query)
+	v := SIS.Sorter(Word)
 	i := 0
-	j := Limit
+	j := len(SIS.Divisions)
 	for i < j {
-		h := i + (j-i)/2
-		if SIS.Divisions[h] < x {
+		h := (i + j) >> 1
+		if SIS.Divisions[h] < v {
 			i = h + 1
 		} else {
 			j = h
 		}
 	}
-	for ; i < Limit; i++ {
+	if i != 0 {
+		i -= 1
+	}
+	IS, ok := SIS.Data[i]
+	ByteWord := SIS.Conversion(Word)
+	if !ok {
+		Words := [][]byte{ByteWord}
+		Dictionary := []string{Word}
+		WordIndex := make([]int, 0)
+		SuffixIndex := make([]int, 0)
+		Length := len(ByteWord)
+		for j := 0; j < Length; j++ {
+			WordIndex = append(WordIndex, i)
+			SuffixIndex = append(SuffixIndex, j)
+		}
+		ISLengths := []int{Length}
+		Words = append(Words, ByteWord)
+		ISLengths = append(ISLengths, i)
+		Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, Words, ISLengths, Dictionary, Conversion}
+		sort.Sort(Suffixes)
+		SIS.Data[i] = Suffixes
+	} else {
+		IS.Insert(Word)
+	}
+}
+
+func (SIS *SortedInvertedSuffix) Query(Query string, ResultsLimit int) []string {
+	Limit := len(SIS.Divisions)
+	if Limit == 0 {
+		return make([]string, 0)
+	}
+	Data := SIS.Conversion(Query)
+	Values := make([]float64, 0)
+	Results := make([]string, 0)
+	a := 0
+	for i := Limit - 1; i >= 0; i-- {
 		IS, ok := SIS.Data[i]
 		if !ok {
 			continue
@@ -501,39 +507,52 @@ func (SIS *SortedInvertedSuffix) Query(Query string, ResultsLimit int) []string 
 				continue
 			}
 			used[x] = true
-			Results = append(Results, IS.Dictionary[x])
-			a++
-			if a == ResultsLimit {
-				return Results
+			w := IS.Dictionary[x]
+			v := SIS.Sorter(w)
+			i := 0
+			j := a
+			for i < j {
+				h := (i + j) >> 1
+				if Values[h] > v {
+					i = h + 1
+				} else {
+					j = h
+				}
 			}
+			if a == ResultsLimit {
+				if i < a {
+					Values = append(Values[:i], append([]float64{v}, Values[i:a-1]...)...)
+					Results = append(Results[:i], append([]string{w}, Results[i:a-1]...)...)
+				}
+			} else {
+				a++
+				if i < a {
+					Values = append(Values[:i], append([]float64{v}, Values[i:]...)...)
+					Results = append(Results[:i], append([]string{w}, Results[i:]...)...)
+				} else {
+					Values = append(Values, v)
+					Results = append(Results, w)
+				}
+			}
+		}
+		if a == ResultsLimit {
+			return Results
 		}
 	}
 	return Results
 }
 
-// Needs work
-/*
-func (SIS *LengthSortedInvertedSuffix) ErrorCorrectingQuery(Query string, ResultsLimit int, ErrorCorrection func([]byte) [][]byte) []string {
-	if len(LSIS.Lengths) == 0 {
+func (SIS *SortedInvertedSuffix) ErrorCorrectingQuery(Query string, ResultsLimit int, ErrorCorrection func([]byte) [][]byte) []string {
+	Limit := len(SIS.Divisions)
+	if Limit == 0 {
 		return make([]string, 0)
 	}
-	Data := LSIS.Conversion(Query)
+	Data := SIS.Conversion(Query)
+	Values := make([]float64, 0)
 	Results := make([]string, 0)
-	Limit := len(LSIS.Lengths)
 	a := 0
-	n := len(Data)
-	i := 0
-	j := len(LSIS.Lengths)
-	for i < j {
-		h := i + (j-i)/2
-		if LSIS.Lengths[h] < n {
-			i = h + 1
-		} else {
-			j = h
-		}
-	}
-	for ; i < Limit; i++ {
-		IS, ok := LSIS.Data[LSIS.Lengths[i]]
+	for i := Limit - 1; i >= 0; i-- {
+		IS, ok := SIS.Data[i]
 		if !ok {
 			continue
 		}
@@ -545,34 +564,49 @@ func (SIS *LengthSortedInvertedSuffix) ErrorCorrectingQuery(Query string, Result
 				continue
 			}
 			used[x] = true
-			Results = append(Results, IS.Dictionary[x])
-			a++
-			if a == ResultsLimit {
-				return Results
+			w := IS.Dictionary[x]
+			v := SIS.Sorter(w)
+			i := 0
+			j := a
+			for i < j {
+				h := (i + j) >> 1
+				if Values[h] > v {
+					i = h + 1
+				} else {
+					j = h
+				}
 			}
+			if a == ResultsLimit {
+				if i < a {
+					Values = append(Values[:i], append([]float64{v}, Values[i:a-1]...)...)
+					Results = append(Results[:i], append([]string{w}, Results[i:a-1]...)...)
+				}
+			} else {
+				a++
+				if i < a {
+					Values = append(Values[:i], append([]float64{v}, Values[i:]...)...)
+					Results = append(Results[:i], append([]string{w}, Results[i:]...)...)
+				} else {
+					Values = append(Values, v)
+					Results = append(Results, w)
+				}
+			}
+		}
+		if a == ResultsLimit {
+			return Results
 		}
 	}
 	if a == 0 {
-		n--
-		i := 0
-		j := len(LSIS.Lengths)
-		for i < j {
-			h := i + (j-i)/2
-			if LSIS.Lengths[h] < n {
-				i = h + 1
-			} else {
-				j = h
-			}
+		Errors := make([][]byte, 0)
+		for _, q := range ErrorCorrection(Data) {
+			Errors = append(Errors, q)
 		}
-		for ; i < Limit; i++ {
-			for _, q := range ErrorCorrection(Data) {
-				if LSIS.Lengths[i] < len(q) {
-					continue
-				}
-				IS, ok := LSIS.Data[LSIS.Lengths[i]]
-				if !ok {
-					continue
-				}
+		for i := Limit - 1; i >= 0; i-- {
+			IS, ok := SIS.Data[i]
+			if !ok {
+				continue
+			}
+			for _, q := range Errors {
 				low, high := IS.Search(q)
 				used := make(map[int]bool, 0)
 				for k := low; k < high; k++ {
@@ -581,15 +615,39 @@ func (SIS *LengthSortedInvertedSuffix) ErrorCorrectingQuery(Query string, Result
 						continue
 					}
 					used[x] = true
-					Results = append(Results, IS.Dictionary[x])
-					a++
+					w := IS.Dictionary[x]
+					v := SIS.Sorter(w)
+					i := 0
+					j := a
+					for i < j {
+						h := (i + j) >> 1
+						if Values[h] > v {
+							i = h + 1
+						} else {
+							j = h
+						}
+					}
 					if a == ResultsLimit {
-						return Results
+						if i < a {
+							Values = append(Values[:i], append([]float64{v}, Values[i:a-1]...)...)
+							Results = append(Results[:i], append([]string{w}, Results[i:a-1]...)...)
+						}
+					} else {
+						a++
+						if i < a {
+							Values = append(Values[:i], append([]float64{v}, Values[i:]...)...)
+							Results = append(Results[:i], append([]string{w}, Results[i:]...)...)
+						} else {
+							Values = append(Values, v)
+							Results = append(Results, w)
+						}
 					}
 				}
+			}
+			if a == ResultsLimit {
+				return Results
 			}
 		}
 	}
 	return Results
 }
-*/
