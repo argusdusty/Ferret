@@ -477,7 +477,7 @@ func (SIS *SortedInvertedSuffix) Insert(Word string) {
 		ISLengths := []int{Length}
 		Words = append(Words, ByteWord)
 		ISLengths = append(ISLengths, i)
-		Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, Words, ISLengths, Dictionary, Conversion}
+		Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, Words, ISLengths, Dictionary, SIS.Conversion}
 		sort.Sort(Suffixes)
 		SIS.Data[i] = Suffixes
 	} else {
