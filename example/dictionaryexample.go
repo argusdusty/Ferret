@@ -14,7 +14,7 @@ var LengthSorter = func(s string) float64 { return float64(-len(s)) }
 
 func main() {
 	t := time.Now()
-	Data, err := ioutil.ReadFile("example/dictionary.dat")
+	Data, err := ioutil.ReadFile("dictionary.dat")
 	if err != nil {
 		panic(err)
 	}
@@ -25,7 +25,7 @@ func main() {
 	fmt.Println("Loaded dictionary in:", time.Now().Sub(t))
 	t = time.Now()
 
-	InvertedSuffix := MakeInvertedSuffix(Dictionary, Conversion)
+	InvertedSuffix := ferret.MakeInvertedSuffix(Dictionary, Conversion)
 	fmt.Println("Created index in:", time.Now().Sub(t))
 	t = time.Now()
 	fmt.Println(InvertedSuffix.Query("ar", 5))
@@ -56,7 +56,7 @@ func main() {
 	fmt.Println("Performed search in:", time.Now().Sub(t))
 	t = time.Now()
 
-	SIS := MakeSortedInvertedSuffix(Dictionary, Conversion, LengthSorter, []float64{-20.0, -15.0, -10.0, -5.0})
+	SIS := ferret.MakeSortedInvertedSuffix(Dictionary, Conversion, LengthSorter, []float64{-20.0, -15.0, -10.0, -5.0})
 	fmt.Println("Created SIS in:", time.Now().Sub(t))
 	t = time.Now()
 	fmt.Println(SIS.Query("ar", 5))
