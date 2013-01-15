@@ -1,6 +1,7 @@
 Ferret: An optimized substring search engine written in Go.
-Makes use of a combination of an Inverted Index and a Suffix Array to allow log-time lookups with a very small memory footprint.
+Makes use of a combination of an Inverted Index and a Suffix Array to allow log-time lookups with a relatively small memory footprint.
 Also incorporates error-correction (Levenshtein distance 1) and simple Unicode-to-ASCII conversion.
+Allows for arbitrary sorting functions
 
 License: CC BY-SA 3.0 (http://creativecommons.org/licenses/by-sa/3.0/)
 You are free to share and remix this work, as long as you attribute the original author, and share it under a similar license
@@ -11,19 +12,9 @@ To Update: go get -u github.com/argusdusty/Ferret
 To Use: import "github.com/argusdusty/Ferret"
 To try the examples: go build example.go && go build dictionaryexample.go
 
-Check out example.go and dictionaryexample.go for example usage. The code is meant to be as fast as possible for a substring dictionary search, and as such is best suited for large dictionaries with >1,000,000 total characters. I've timed 20s initialization for 3.5 million characters on a modern CPU (350,000 entries), and 200us search time (3ms with error-correction).
+Check out example.go and dictionaryexample.go for example usage. The code is meant to be as fast as possible for a substring dictionary search, and as such is best suited for large dictionaries with >1,000,000 total characters. I've timed 20s initialization for 3.5 million characters (350,000 entries) on a modern CPU, and 200us search time (3ms with error-correction).
 
-Running Times:
-	InvertedSuffix generation: Theta(n*log(n))
-	LengthSortedInvertedSuffix generation: O(n*log(n)), Omega(k*log(n/k))
-	InvertedSuffix Unsorted lookup: O(m*log(n)), Omega(log(n))
-	InvertedSuffix Sorted lookup: O(m*log(n)+k*log(r)), Omega(log(n))
-	InvertedSuffix Error-correcting Unsorted lookup: O(m^2*c*log(n)+r), Omega(m*c*log(n))
-	InvertedSuffix Error-correcting Sorted lookup: O(m^2*c*log(n)+k*log(r)), Omega(m*c*log(n))
-	LengthSortedInvertedSuffix lookup: O(m*k), Omega(m*log(n/k*r))
-	Variables:
-		m = len(Query)
-		n = sum(len(Word) for Word in Dictionary) (characters in dictionary)
-		k = len(Dictionary) (words in dictionary)
-		r = ResultsLimit
-		c = len(ErrorCorrection(Query))/m
+Uses linear memory (approximately 2-3 times the size of the dictionary)
+Searches performed in log time with the number of characters in the dictionary.
+Sorted searches can be slow, taking ~linear time with the number of matches, rather than linear time with the results limit.
+SortedInvertedSuffixes are meant to speed this up by doing some presorting, grouping possible results into categories by a predefined score, then searching the 'top' categories first.
