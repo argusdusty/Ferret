@@ -300,7 +300,7 @@ func (IS *InvertedSuffix) ErrorCorrectingQuery(Word string, ResultsLimit int, Er
 //     ErrorCorrection: Returns a list of alternate queries
 //     Sorter: Takes (Result, Value, Length, Index (where Query begins in Result))
 //         (string, []byte, int, int), and produces a value (float64) to sort by (largest first).
-func (IS *InvertedSuffix) SortedErrorCorrectingQuery(Word string, ResultsLimit int, ErrorCorrection func([]byte) [][]byte, Sorter func(string, []uint64, int, int) float64) ([]string, [][]uint64) {
+func (IS *InvertedSuffix) SortedErrorCorrectingQuery(Word string, ResultsLimit int, ErrorCorrection func([]byte) [][]byte, Sorter func(string, []uint64, int, int) float64) ([]string, [][]uint64, []float64) {
 	Query := IS.Converter(Word)
 	Results := make([]string, 0)
 	Values := make([][]uint64, 0)
