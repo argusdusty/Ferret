@@ -389,7 +389,7 @@ func (IS *InvertedSuffix) SortedErrorCorrectingQuery(Word string, ResultsLimit i
 			}
 		}
 	}
-	return Results, Values
+	return Results, Values, Scores
 }
 
 /*
