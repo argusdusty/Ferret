@@ -21,18 +21,18 @@ func main() {
 		panic(err)
 	}
 	Words := make([]string, 0)
-	Values := make([]uint64, 0)
-	for i, Vals := range bytes.Split(Data, []byte("\r\n")) {
+	Values := make([][]uint64, 0)
+	for _, Vals := range bytes.Split(Data, []byte("\r\n")) {
 		WordFreq := bytes.Split(Vals, []byte(" "))
 		if len(WordFreq) != 2 {
 			continue
 		}
-		Freq, err := strconv.ParseUint(WordFreq[1], 10, 64)
+		Freq, err := strconv.ParseUint(string(WordFreq[1]), 10, 64)
 		if err != nil {
 			continue
 		}
 		Words = append(Words, string(WordFreq[0]))
-		Values = append(Values, Freq)
+		Values = append(Values, []uint64{Freq})
 	}
 	fmt.Println("Loaded dictionary in:", time.Now().Sub(t))
 	t = time.Now()
@@ -56,6 +56,9 @@ func main() {
 	fmt.Println("Performed sorted error correcting search in:", time.Now().Sub(t))
 	t = time.Now()
 	PrintSortedArrays(InvertedSuffix.SortedQuery("a", 5, LengthSorter))
+	fmt.Println("Performed sorted search in:", time.Now().Sub(t))
+	t = time.Now()
+	PrintSortedArrays(InvertedSuffix.SortedQuery("a", 5, FreqSorter))
 	fmt.Println("Performed sorted search in:", time.Now().Sub(t))
 	t = time.Now()
 	PrintArrays(InvertedSuffix.Query("a", 5))

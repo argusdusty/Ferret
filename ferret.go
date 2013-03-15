@@ -83,6 +83,54 @@ func (IS *InvertedSuffix) Insert(Word string, Data []uint64) {
 			return
 		}
 	}
+	i := len(IS.Words)
+	IS.Words = append(IS.Words, word)
+	Length := len(word)
+	IS.Lengths = append(IS.Lengths, Length)
+	IS.OrigWords = append(IS.OrigWords, Word)
+	IS.Values = append(IS.Values, Data)
+	for j := 0; j < Length; j++ {
+		k := sort.Search(IS.Len(), func(h int) bool {
+			y := IS.WordIndex[h]
+			a := word
+			b := IS.Words[y]
+			pa := j
+			pb := IS.SuffixIndex[h]
+			na := Length
+			nb := IS.Lengths[y]
+			for pa < na && pb < nb {
+				wa := a[pa]
+				wb := b[pb]
+				if wa < wb {
+					return true
+				}
+				if wb < wa {
+					return false
+				}
+				pa++
+				pb++
+			}
+			if pa == na {
+				return true
+			}
+			return false
+		})
+		// This part here is slow
+		IS.WordIndex = append(IS.WordIndex[:k], append([]int{i}, IS.WordIndex[k:]...)...)
+		IS.SuffixIndex = append(IS.SuffixIndex[:k], append([]int{j}, IS.SuffixIndex[k:]...)...)
+	}
+}
+
+/*
+func (IS *InvertedSuffix) Insert(Word string, Data []uint64) {
+	word := IS.Converter(Word)
+	low, high := IS.Search(word)
+	for k := low; k < high; k++ {
+		if IS.OrigWords[IS.WordIndex[k]] == Word {
+			IS.Values[IS.WordIndex[k]] = Data
+			return
+		}
+	}
 	N := len(word)
 	i := len(IS.Words)
 	for j := 0; j < N; j++ {
@@ -95,6 +143,7 @@ func (IS *InvertedSuffix) Insert(Word string, Data []uint64) {
 	IS.Values = append(IS.Values, Data)
 	sort.Sort(IS)
 }
+*/
 
 // Performs an exact substring search for the query in the word dictionary
 // Returns the boundaries (low/high) of sorted suffixes which have the query as a prefix
