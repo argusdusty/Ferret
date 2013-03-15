@@ -84,7 +84,7 @@ func (IS *InvertedSuffix) Insert(Word string, Data []uint64) {
 		}
 	}
 	N := len(word)
-	i := IS.Len()
+	i := len(IS.Words)
 	for j := 0; j < N; j++ {
 		IS.WordIndex = append(IS.WordIndex, i)
 		IS.SuffixIndex = append(IS.SuffixIndex, j)

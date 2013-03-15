@@ -64,7 +64,7 @@ func main() {
 	PrintArrays(InvertedSuffix.Query("the", 25))
 	fmt.Println("Performed search in:", time.Now().Sub(t))
 	t = time.Now()
-	InvertedSuffix.Insert("asdfghjklqwertyuiopzxcvbnm")
+	InvertedSuffix.Insert("asdfghjklqwertyuiopzxcvbnm", []uint64{0})
 	fmt.Println("Performed insert in:", time.Now().Sub(t))
 	t = time.Now()
 	PrintArrays(InvertedSuffix.Query("sdfghjklqwert", 5))

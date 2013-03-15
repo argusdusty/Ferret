@@ -41,10 +41,10 @@ func main() {
 	PrintSortedArrays(ExampleInvertedSuffix.SortedErrorCorrectingQuery("tsst", 5, ExampleCorrection, ExampleSorter))
 	PrintSortedArrays(ExampleInvertedSuffix.SortedQuery("a", 5, ExampleSorter))
 	PrintArrays(ExampleInvertedSuffix.Query("a", 5))
-	ExampleInvertedSuffix.Insert("asdfghjklqwertyuiopzxcvbnm", []byte{26})
+	ExampleInvertedSuffix.Insert("asdfghjklqwertyuiopzxcvbnm", []uint64{26})
 	PrintArrays(ExampleInvertedSuffix.Query("sdfghjklqwert", 5))
 	PrintArrays(ExampleInvertedSuffix.Query("ferret", 5))
-	ExampleInvertedSuffix.Insert("ferret", []byte{7})
+	ExampleInvertedSuffix.Insert("ferret", []uint64{7})
 	PrintArrays(ExampleInvertedSuffix.Query("ferret", 5))
 }
 
