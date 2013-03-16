@@ -6,7 +6,6 @@ type InvertedSuffix struct {
 	WordIndex   []int // WordIndex and SuffixIndex are sorted by Words[WordIndex[i]][SuffixIndex[i]:]
 	SuffixIndex []int
 	Words       [][]byte
-	Lengths     []int // Lengths[i] == len(Words[i])
 	OrigWords   []string
 	Values      [][]uint64 // Some data mapped to the words
 	Converter   func(string) []byte
@@ -31,8 +30,8 @@ func (IS *InvertedSuffix) Less(i, j int) bool {
 	b := IS.Words[y]
 	pa := IS.SuffixIndex[i]
 	pb := IS.SuffixIndex[j]
-	na := IS.Lengths[x]
-	nb := IS.Lengths[y]
+	na := len(a)
+	nb := len(b)
 	for pa < na && pb < nb {
 		wa := a[pa]
 		wb := b[pb]
@@ -56,18 +55,15 @@ func MakeInvertedSuffix(Words []string, Data [][]uint64, Converter func(string) 
 	WordIndex := make([]int, 0)
 	SuffixIndex := make([]int, 0)
 	NewWords := make([][]byte, 0)
-	Lengths := make([]int, 0)
 	for i, Word := range Words {
 		word := Converter(Word)
-		N := len(word)
-		for j := 0; j < N; j++ {
+		for j := 0; j < len(word); j++ {
 			WordIndex = append(WordIndex, i)
 			SuffixIndex = append(SuffixIndex, j)
 		}
 		NewWords = append(NewWords, word)
-		Lengths = append(Lengths, N)
 	}
-	Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, NewWords, Lengths, Words, Data, Converter}
+	Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, NewWords, Words, Data, Converter}
 	sort.Sort(Suffixes)
 	return Suffixes
 }
@@ -75,8 +71,8 @@ func MakeInvertedSuffix(Words []string, Data [][]uint64, Converter func(string) 
 // Adds a word to the dictionary that IS was built on.
 // This is pretty slow, so stick to MakeInvertedSuffix when you can
 func (IS *InvertedSuffix) Insert(Word string, Data []uint64) {
-	word := IS.Converter(Word)
-	low, high := IS.Search(word)
+	Query := IS.Converter(Word)
+	low, high := IS.Search(Query)
 	for k := low; k < high; k++ {
 		if IS.OrigWords[IS.WordIndex[k]] == Word {
 			IS.Values[IS.WordIndex[k]] = Data
@@ -84,66 +80,20 @@ func (IS *InvertedSuffix) Insert(Word string, Data []uint64) {
 		}
 	}
 	i := len(IS.Words)
-	IS.Words = append(IS.Words, word)
-	Length := len(word)
-	IS.Lengths = append(IS.Lengths, Length)
+	IS.Words = append(IS.Words, Query)
+	Length := len(Query)
 	IS.OrigWords = append(IS.OrigWords, Word)
 	IS.Values = append(IS.Values, Data)
 	for j := 0; j < Length; j++ {
-		k := sort.Search(IS.Len(), func(h int) bool {
-			y := IS.WordIndex[h]
-			a := word
-			b := IS.Words[y]
-			pa := j
-			pb := IS.SuffixIndex[h]
-			na := Length
-			nb := IS.Lengths[y]
-			for pa < na && pb < nb {
-				wa := a[pa]
-				wb := b[pb]
-				if wa < wb {
-					return true
-				}
-				if wb < wa {
-					return false
-				}
-				pa++
-				pb++
-			}
-			if pa == na {
-				return true
-			}
-			return false
-		})
-		// This part here is slow
-		IS.WordIndex = append(IS.WordIndex[:k], append([]int{i}, IS.WordIndex[k:]...)...)
-		IS.SuffixIndex = append(IS.SuffixIndex[:k], append([]int{j}, IS.SuffixIndex[k:]...)...)
+		k, _ := IS.Search(Query[j:])
+		IS.WordIndex = append(IS.WordIndex, 0)
+		copy(IS.WordIndex[k+1:], IS.WordIndex[k:])
+		IS.WordIndex[k] = i
+		IS.SuffixIndex = append(IS.SuffixIndex, 0)
+		copy(IS.SuffixIndex[k+1:], IS.SuffixIndex[k:])
+		IS.SuffixIndex[k] = j
 	}
 }
-
-/*
-func (IS *InvertedSuffix) Insert(Word string, Data []uint64) {
-	word := IS.Converter(Word)
-	low, high := IS.Search(word)
-	for k := low; k < high; k++ {
-		if IS.OrigWords[IS.WordIndex[k]] == Word {
-			IS.Values[IS.WordIndex[k]] = Data
-			return
-		}
-	}
-	N := len(word)
-	i := len(IS.Words)
-	for j := 0; j < N; j++ {
-		IS.WordIndex = append(IS.WordIndex, i)
-		IS.SuffixIndex = append(IS.SuffixIndex, j)
-	}
-	IS.Words = append(IS.Words, word)
-	IS.OrigWords = append(IS.OrigWords, Word)
-	IS.Lengths = append(IS.Lengths, N)
-	IS.Values = append(IS.Values, Data)
-	sort.Sort(IS)
-}
-*/
 
 // Performs an exact substring search for the query in the word dictionary
 // Returns the boundaries (low/high) of sorted suffixes which have the query as a prefix
@@ -160,7 +110,7 @@ func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 			h := (i + j) >> 1
 			Index := IS.WordIndex[h]
 			Word := IS.Words[Index]
-			Length := IS.Lengths[Index]
+			Length := len(Word)
 			d := IS.SuffixIndex[h] + a
 			if d >= Length {
 				i = h + 1
@@ -178,14 +128,14 @@ func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 		}
 		low = i
 		if low == high {
-			return low, high
+			break
 		}
 		j = high
 		for i < j {
 			h := (i + j) >> 1
 			Index := IS.WordIndex[h]
 			Word := IS.Words[Index]
-			Length := IS.Lengths[Index]
+			Length := len(Word)
 			d := IS.SuffixIndex[h] + a
 			if d >= Length {
 				i = h + 1
@@ -193,6 +143,9 @@ func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 				e := Word[d]
 				if e <= c {
 					i = h + 1
+					if e < c {
+						low = i
+					}
 				} else {
 					j = h
 				}
@@ -200,7 +153,7 @@ func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 		}
 		high = j
 		if low == high {
-			return low, high
+			break
 		}
 	}
 	return low, high
@@ -253,7 +206,7 @@ func (IS *InvertedSuffix) SortedQuery(Word string, ResultsLimit int, Sorter func
 		x := IS.WordIndex[k]
 		w := IS.OrigWords[x]
 		v := IS.Values[x]
-		s := Sorter(w, v, IS.Lengths[x], IS.SuffixIndex[k])
+		s := Sorter(w, v, len(IS.Words[x]), IS.SuffixIndex[k])
 		if ps, ok := used[x]; ok && ps >= s {
 			continue
 		}
@@ -270,16 +223,25 @@ func (IS *InvertedSuffix) SortedQuery(Word string, ResultsLimit int, Sorter func
 		}
 		if a == ResultsLimit {
 			if i < a {
-				Results = append(Results[:i], append([]string{w}, Results[i:a-1]...)...)
-				Values = append(Values[:i], append([][]uint64{v}, Values[i:a-1]...)...)
-				Scores = append(Scores[:i], append([]float64{s}, Scores[i:a-1]...)...)
+				copy(Results[i+1:], Results[i:a-1])
+				Results[i] = w
+				copy(Values[i+1:], Values[i:a-1])
+				Values[i] = v
+				copy(Scores[i+1:], Scores[i:a-1])
+				Scores[i] = s
 			}
 		} else {
 			a++
 			if i < a {
-				Results = append(Results[:i], append([]string{w}, Results[i:]...)...)
-				Values = append(Values[:i], append([][]uint64{v}, Values[i:]...)...)
-				Scores = append(Scores[:i], append([]float64{s}, Scores[i:]...)...)
+				Results = append(Results, "")
+				copy(Results[i+1:], Results[i:])
+				Results[i] = w
+				Values = append(Values, []uint64{0})
+				copy(Values[i+1:], Values[i:a-1])
+				Values[i] = v
+				Scores = append(Scores, 0.0)
+				copy(Scores[i+1:], Scores[i:a-1])
+				Scores[i] = s
 			} else {
 				Results = append(Results, w)
 				Values = append(Values, v)
@@ -361,7 +323,7 @@ func (IS *InvertedSuffix) SortedErrorCorrectingQuery(Word string, ResultsLimit i
 		x := IS.WordIndex[k]
 		w := IS.OrigWords[x]
 		v := IS.Values[x]
-		s := Sorter(w, v, IS.Lengths[x], IS.SuffixIndex[k])
+		s := Sorter(w, v, len(IS.Words[x]), IS.SuffixIndex[k])
 		if ps, ok := used[x]; ok && ps >= s {
 			continue
 		}
@@ -378,16 +340,25 @@ func (IS *InvertedSuffix) SortedErrorCorrectingQuery(Word string, ResultsLimit i
 		}
 		if a == ResultsLimit {
 			if i < a {
-				Results = append(Results[:i], append([]string{w}, Results[i:a-1]...)...)
-				Values = append(Values[:i], append([][]uint64{v}, Values[i:a-1]...)...)
-				Scores = append(Scores[:i], append([]float64{s}, Scores[i:a-1]...)...)
+				copy(Results[i+1:], Results[i:a-1])
+				Results[i] = w
+				copy(Values[i+1:], Values[i:a-1])
+				Values[i] = v
+				copy(Scores[i+1:], Scores[i:a-1])
+				Scores[i] = s
 			}
 		} else {
 			a++
 			if i < a {
-				Results = append(Results[:i], append([]string{w}, Results[i:]...)...)
-				Values = append(Values[:i], append([][]uint64{v}, Values[i:]...)...)
-				Scores = append(Scores[:i], append([]float64{s}, Scores[i:]...)...)
+				Results = append(Results, "")
+				copy(Results[i+1:], Results[i:])
+				Results[i] = w
+				Values = append(Values, []uint64{0})
+				copy(Values[i+1:], Values[i:a-1])
+				Values[i] = v
+				Scores = append(Scores, 0.0)
+				copy(Scores[i+1:], Scores[i:a-1])
+				Scores[i] = s
 			} else {
 				Results = append(Results, w)
 				Values = append(Values, v)
@@ -402,7 +373,7 @@ func (IS *InvertedSuffix) SortedErrorCorrectingQuery(Word string, ResultsLimit i
 				x := IS.WordIndex[k]
 				w := IS.OrigWords[x]
 				v := IS.Values[x]
-				s := Sorter(w, v, IS.Lengths[x], IS.SuffixIndex[k])
+				s := Sorter(w, v, len(IS.Words[x]), IS.SuffixIndex[k])
 				if ps, ok := used[x]; ok && ps >= s {
 					continue
 				}
@@ -419,16 +390,25 @@ func (IS *InvertedSuffix) SortedErrorCorrectingQuery(Word string, ResultsLimit i
 				}
 				if a == ResultsLimit {
 					if i < a {
-						Results = append(Results[:i], append([]string{w}, Results[i:a-1]...)...)
-						Values = append(Values[:i], append([][]uint64{v}, Values[i:a-1]...)...)
-						Scores = append(Scores[:i], append([]float64{s}, Scores[i:a-1]...)...)
+						copy(Results[i+1:], Results[i:a-1])
+						Results[i] = w
+						copy(Values[i+1:], Values[i:a-1])
+						Values[i] = v
+						copy(Scores[i+1:], Scores[i:a-1])
+						Scores[i] = s
 					}
 				} else {
 					a++
 					if i < a {
-						Results = append(Results[:i], append([]string{w}, Results[i:]...)...)
-						Values = append(Values[:i], append([][]uint64{v}, Values[i:]...)...)
-						Scores = append(Scores[:i], append([]float64{s}, Scores[i:]...)...)
+						Results = append(Results, "")
+						copy(Results[i+1:], Results[i:])
+						Results[i] = w
+						Values = append(Values, []uint64{0})
+						copy(Values[i+1:], Values[i:a-1])
+						Values[i] = v
+						Scores = append(Scores, 0.0)
+						copy(Scores[i+1:], Scores[i:a-1])
+						Scores[i] = s
 					} else {
 						Results = append(Results, w)
 						Values = append(Values, v)

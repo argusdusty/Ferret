@@ -33,25 +33,17 @@ var ExampleCorrection = func(b []byte) [][]byte { return ferret.ErrorCorrect(b, 
 var ExampleSorter = func(s string, v []uint64, l int, i int) float64 { return -float64(l + i) }
 var ExampleConverter = func(s string) []byte { return []byte(s) }
 
-func main() {
+func example() {
 	ExampleInvertedSuffix := ferret.MakeInvertedSuffix(ExampleWords, ExampleData, ExampleConverter)
-	PrintArrays(ExampleInvertedSuffix.Query("ar", 5))
-	PrintArrays(ExampleInvertedSuffix.Query("test", 5))
-	PrintArrays(ExampleInvertedSuffix.ErrorCorrectingQuery("tsst", 5, ExampleCorrection))
-	PrintSortedArrays(ExampleInvertedSuffix.SortedErrorCorrectingQuery("tsst", 5, ExampleCorrection, ExampleSorter))
-	PrintSortedArrays(ExampleInvertedSuffix.SortedQuery("a", 5, ExampleSorter))
-	PrintArrays(ExampleInvertedSuffix.Query("a", 5))
+	fmt.Println(ExampleInvertedSuffix.Query("ar", 5))
+	fmt.Println(ExampleInvertedSuffix.Query("test", 5))
+	fmt.Println(ExampleInvertedSuffix.ErrorCorrectingQuery("tsst", 5, ExampleCorrection))
+	fmt.Println(ExampleInvertedSuffix.SortedErrorCorrectingQuery("tsst", 5, ExampleCorrection, ExampleSorter))
+	fmt.Println(ExampleInvertedSuffix.SortedQuery("a", 5, ExampleSorter))
+	fmt.Println(ExampleInvertedSuffix.Query("a", 5))
 	ExampleInvertedSuffix.Insert("asdfghjklqwertyuiopzxcvbnm", []uint64{26})
-	PrintArrays(ExampleInvertedSuffix.Query("sdfghjklqwert", 5))
-	PrintArrays(ExampleInvertedSuffix.Query("ferret", 5))
+	fmt.Println(ExampleInvertedSuffix.Query("sdfghjklqwert", 5))
+	fmt.Println(ExampleInvertedSuffix.Query("ferret", 5))
 	ExampleInvertedSuffix.Insert("ferret", []uint64{7})
-	PrintArrays(ExampleInvertedSuffix.Query("ferret", 5))
-}
-
-func PrintArrays(r []string, v [][]uint64) {
-	fmt.Println(r, v)
-}
-
-func PrintSortedArrays(r []string, v [][]uint64, s []float64) {
-	fmt.Println(r, v, s)
+	fmt.Println(ExampleInvertedSuffix.Query("ferret", 5))
 }
