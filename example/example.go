@@ -33,7 +33,7 @@ var ExampleCorrection = func(b []byte) [][]byte { return ferret.ErrorCorrect(b, 
 var ExampleSorter = func(s string, v []uint64, l int, i int) float64 { return -float64(l + i) }
 var ExampleConverter = func(s string) []byte { return []byte(s) }
 
-func example() {
+func main() {
 	ExampleInvertedSuffix := ferret.MakeInvertedSuffix(ExampleWords, ExampleData, ExampleConverter)
 	fmt.Println(ExampleInvertedSuffix.Query("ar", 5))
 	fmt.Println(ExampleInvertedSuffix.Query("test", 5))
