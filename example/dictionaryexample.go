@@ -70,7 +70,7 @@ func main() {
 	fmt.Println(InvertedSuffix.SortedQuery("the", 25, FreqSorter))
 	fmt.Println("Performed sorted search in:", time.Now().Sub(t))
 	t = time.Now()
-	InvertedSuffix.Insert("asdfghjklqwertyuiopzxcvbnm", 0)
+	InvertedSuffix.Insert("asdfghjklqwertyuiopzxcvbnm", uint64(0))
 	fmt.Println("Performed insert in:", time.Now().Sub(t))
 	t = time.Now()
 	fmt.Println(InvertedSuffix.Query("sdfghjklqwert", 5))
