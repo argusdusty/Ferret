@@ -17,7 +17,7 @@ var ExampleWords = []string{
 	"ferret",
 }
 
-var ExampleData = [][]uint64{
+var ExampleData = []interface{}{
 	[]uint64{8},
 	[]uint64{6},
 	[]uint64{6},
@@ -30,7 +30,7 @@ var ExampleData = [][]uint64{
 }
 
 var ExampleCorrection = func(b []byte) [][]byte { return ferret.ErrorCorrect(b, ferret.LowercaseLetters) }
-var ExampleSorter = func(s string, v []uint64, l int, i int) float64 { return -float64(l + i) }
+var ExampleSorter = func(s string, v interface{}, l int, i int) float64 { return -float64(l + i) }
 var ExampleConverter = func(s string) []byte { return []byte(s) }
 
 func main() {

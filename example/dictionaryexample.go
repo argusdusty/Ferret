@@ -10,8 +10,8 @@ import (
 )
 
 var Correction = func(b []byte) [][]byte { return ferret.ErrorCorrect(b, ferret.LowercaseLetters) }
-var LengthSorter = func(s string, v []uint64, l int, i int) float64 { return -float64(l + i) }
-var FreqSorter = func(s string, v []uint64, l int, i int) float64 { return float64(v[0]) }
+var LengthSorter = func(s string, v interface{}, l int, i int) float64 { return -float64(l + i) }
+var FreqSorter = func(s string, v interface{}, l int, i int) float64 { return float64(v.(uint64)) }
 var Converter = ferret.UnicodeToLowerASCII
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 		panic(err)
 	}
 	Words := make([]string, 0)
-	Values := make([][]uint64, 0)
+	Values := make([]interface{}, 0)
 	for _, Vals := range bytes.Split(Data, []byte("\r\n")) {
 		WordFreq := bytes.Split(Vals, []byte(" "))
 		if len(WordFreq) != 2 {
@@ -32,7 +32,7 @@ func main() {
 			continue
 		}
 		Words = append(Words, string(WordFreq[0]))
-		Values = append(Values, []uint64{Freq})
+		Values = append(Values, Freq)
 	}
 	fmt.Println("Loaded dictionary in:", time.Now().Sub(t))
 	t = time.Now()
@@ -70,7 +70,7 @@ func main() {
 	fmt.Println(InvertedSuffix.SortedQuery("the", 25, FreqSorter))
 	fmt.Println("Performed sorted search in:", time.Now().Sub(t))
 	t = time.Now()
-	InvertedSuffix.Insert("asdfghjklqwertyuiopzxcvbnm", []uint64{0})
+	InvertedSuffix.Insert("asdfghjklqwertyuiopzxcvbnm", 0)
 	fmt.Println("Performed insert in:", time.Now().Sub(t))
 	t = time.Now()
 	fmt.Println(InvertedSuffix.Query("sdfghjklqwert", 5))
