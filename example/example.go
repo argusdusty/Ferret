@@ -29,7 +29,7 @@ var ExampleData = [][]uint64{
 	[]uint64{6},
 }
 
-var ExampleCorrection = func(b []byte) [][]byte { return ferret.ErrorCorrect(b, ferret.LowercaseASCII) }
+var ExampleCorrection = func(b []byte) [][]byte { return ferret.ErrorCorrect(b, ferret.LowercaseLetters) }
 var ExampleSorter = func(s string, v []uint64, l int, i int) float64 { return -float64(l + i) }
 var ExampleConverter = func(s string) []byte { return []byte(s) }
 

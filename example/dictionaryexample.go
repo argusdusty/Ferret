@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var Correction = func(b []byte) [][]byte { return ferret.ErrorCorrect(b, ferret.LowercaseASCII) }
+var Correction = func(b []byte) [][]byte { return ferret.ErrorCorrect(b, ferret.LowercaseLetters) }
 var LengthSorter = func(s string, v []uint64, l int, i int) float64 { return -float64(l + i) }
 var FreqSorter = func(s string, v []uint64, l int, i int) float64 { return float64(v[0]) }
 var Converter = ferret.UnicodeToLowerASCII
