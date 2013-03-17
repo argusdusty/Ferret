@@ -5,7 +5,7 @@ import (
 	"unicode"
 )
 
-// Only handles Lowercase Latin-1 Supplement
+// Only handles Latin-1 Supplement
 var UnicodeToASCII = map[rune]rune{
 	'À': 'A', 'Á': 'A', 'Â': 'A', 'Ã': 'A', 'Ä': 'A', 'Å': 'A',
 	//'Æ':'AE',
@@ -39,5 +39,5 @@ func ToASCII(r rune) rune {
 }
 
 func UnicodeToLowerASCII(s string) []byte {
-	return []byte(strings.Map(func(r rune) rune { return ToASCII(unicode.ToLower(r)) }, s))
+	return []byte(strings.Map(func(r rune) rune { return unicode.ToLower(ToASCII(r)) }, s))
 }
