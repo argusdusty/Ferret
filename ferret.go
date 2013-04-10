@@ -421,6 +421,7 @@ func (IS *InvertedSuffix) SortedErrorCorrectingQuery(Word string, ResultsLimit i
 	return Results, Values, Scores
 }
 
+// Disabled for now while I work out how to adapt the below algorithm to the new data structure
 /*
 
 // A variant of the InvertedSuffix, which splits the InvertedSuffixes by value
@@ -679,5 +680,4 @@ func (SIS *SortedInvertedSuffix) ErrorCorrectingQuery(Query []byte, ResultsLimit
 	}
 	return Results
 }
-
 */
