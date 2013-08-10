@@ -15,6 +15,6 @@ To try the examples: go build example.go && go build dictionaryexample.go
 
 Check out example.go and dictionaryexample.go for example usage. The code is meant to be as fast as possible for a substring dictionary search, and as such is best suited for large dictionaries with >1,000,000 total characters. I've timed 10s initialization for 3.5 million characters (350,000 entries) on a modern CPU, and 15us search time (4000us with error-correction).
 
-Uses linear memory (approximately 10 times the size of the dictionary)
+Uses linear memory (~10-18 bytes per character)
 Searches performed in log time with the number of characters in the dictionary.
 Sorted searches can be slow, taking ~linear time with the number of matches, rather than linear time with the results limit.
