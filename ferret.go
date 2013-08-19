@@ -141,7 +141,7 @@ func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 		oldhigh := high
 		i := low
 		j := high
-		// Lower the upper bound
+		// Raise the lower-bound
 		for i < j {
 			h := (i + j) >> 1
 			Index := IS.WordIndex[h]
@@ -171,7 +171,7 @@ func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 			// nothing to do here: Word[IS.SuffixIndex[(i + j) >> 1] + a] == c
 			continue
 		}
-		// Raise the lower bound
+		// Lower the upper-bound
 		for i < j {
 			h := (i + j) >> 1
 			Index := IS.WordIndex[h]
