@@ -1,35 +1,67 @@
+// Copyright 2013 Mark Canning
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+//
+// Author: Mark Canning
+// Developed at: Tamber, Inc. (http://www.tamber.com/).
+//
+// Tamber also has this really cool recommendation engine for music
+// (also development by me) which prioritizes up-and-coming artists, so
+// it doesn't succomb to the popularity biases that plague modern
+// recommendation engines, and still produces excellent personalized
+// recommendations! Make sure to check us out at http://www.tamber.com
+// or https://itunes.apple.com/us/app/tamber-concerts/id658240483
+
 package ferret
 
 import "sort"
 
 type InvertedSuffix struct {
-	WordIndex   []int // WordIndex and SuffixIndex are sorted by Words[WordIndex[i]][SuffixIndex[i]:]
+	WordIndex   []int               // WordIndex and SuffixIndex are sorted by Words[WordIndex[i]][SuffixIndex[i]:]
+	SuffixIndex []int               // WordIndex and SuffixIndex are sorted by Words[WordIndex[i]][SuffixIndex[i]:]
+	Words       [][]byte            // The words to perform substring searches over
+	Results     []string            // The 'true' value of the words. Used as a return value
+	Values      []interface{}       // Some data mapped to the words. Used for sorting, and as a return value
+	Converter   func(string) []byte // A converter for an inserted word/query to a byte array to search for/with
+}
+
+// A wrapper type used to sort the three arrays according to sort.sort
+type sortWrapper struct {
+	WordIndex   []int
 	SuffixIndex []int
 	Words       [][]byte
-	Results     []string
-	Values      []interface{} // Some data mapped to the words
-	Converter   func(string) []byte
 }
 
-func (IS *InvertedSuffix) Swap(i, j int) {
-	IS.WordIndex[i], IS.WordIndex[j] = IS.WordIndex[j], IS.WordIndex[i]
-	IS.SuffixIndex[i], IS.SuffixIndex[j] = IS.SuffixIndex[j], IS.SuffixIndex[i]
+func (SW *sortWrapper) Swap(i, j int) {
+	SW.WordIndex[i], SW.WordIndex[j] = SW.WordIndex[j], SW.WordIndex[i]
+	SW.SuffixIndex[i], SW.SuffixIndex[j] = SW.SuffixIndex[j], SW.SuffixIndex[i]
 }
 
-func (IS *InvertedSuffix) Len() int {
-	return len(IS.WordIndex)
+func (SW *sortWrapper) Len() int {
+	return len(SW.WordIndex)
 }
 
 // Equivalent to:
 // bytes.Compare(S.Words[S.WordIndex[i]][S.SuffixIndex[i]:], S.Words[S.WordIndex[j]][S.SuffixIndex[j]:]) <= 0
 // but faster
-func (IS *InvertedSuffix) Less(i, j int) bool {
-	x := IS.WordIndex[i]
-	y := IS.WordIndex[j]
-	a := IS.Words[x]
-	b := IS.Words[y]
-	pa := IS.SuffixIndex[i]
-	pb := IS.SuffixIndex[j]
+func (SW *sortWrapper) Less(i, j int) bool {
+	x := SW.WordIndex[i]
+	y := SW.WordIndex[j]
+	a := SW.Words[x]
+	b := SW.Words[y]
+	pa := SW.SuffixIndex[i]
+	pb := SW.SuffixIndex[j]
 	na := len(a)
 	nb := len(b)
 	for pa < na && pb < nb {
@@ -50,8 +82,8 @@ func (IS *InvertedSuffix) Less(i, j int) bool {
 	return false
 }
 
-// Creates an inverted suffix from a dictionary of byte arrays
-func MakeInvertedSuffix(Words, Results []string, Data []interface{}, Converter func(string) []byte) *InvertedSuffix {
+// Creates an inverted suffix from a dictionary of byte arrays, mapping data, and a string->[]byte converter
+func New(Words, Results []string, Data []interface{}, Converter func(string) []byte) *InvertedSuffix {
 	WordIndex := make([]int, 0)
 	SuffixIndex := make([]int, 0)
 	NewWords := make([][]byte, 0)
@@ -63,13 +95,14 @@ func MakeInvertedSuffix(Words, Results []string, Data []interface{}, Converter f
 		}
 		NewWords = append(NewWords, word)
 	}
+	sort.Sort(&sortWrapper{WordIndex, SuffixIndex, NewWords})
 	Suffixes := &InvertedSuffix{WordIndex, SuffixIndex, NewWords, Results, Data, Converter}
-	sort.Sort(Suffixes)
 	return Suffixes
 }
 
 // Adds a word to the dictionary that IS was built on.
-// This is pretty slow, so stick to MakeInvertedSuffix when you can
+// This is pretty slow, because of linear-time insertion into an array,
+// so stick to MakeInvertedSuffix when you can
 func (IS *InvertedSuffix) Insert(Word, Result string, Data interface{}) {
 	Query := IS.Converter(Word)
 	low, high := IS.Search(Query)
@@ -100,7 +133,7 @@ func (IS *InvertedSuffix) Insert(Word, Result string, Data interface{}) {
 // This is a low-level interface. I wouldn't recommend using this yourself
 func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 	low := 0
-	high := IS.Len()
+	high := len(IS.WordIndex)
 	n := len(Query)
 	for a := 0; a < n; a++ {
 		c := Query[a]
@@ -108,6 +141,7 @@ func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 		oldhigh := high
 		i := low
 		j := high
+		// Lower the upper bound
 		for i < j {
 			h := (i + j) >> 1
 			Index := IS.WordIndex[h]
@@ -137,6 +171,7 @@ func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 			// nothing to do here: Word[IS.SuffixIndex[(i + j) >> 1] + a] == c
 			continue
 		}
+		// Raise the lower bound
 		for i < j {
 			h := (i + j) >> 1
 			Index := IS.WordIndex[h]
@@ -165,8 +200,7 @@ func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 	return low, high
 }
 
-// Returns the strings which contain the query, and their stored values
-// Unsorted. Might be partially sorted alphabetically?
+// Returns the strings which contain the query, and their stored values unsorted
 // Input:
 //     Word: The substring to search for.
 //     ResultsLimit: Limit the results to some number of values. Set to -1 for no limit
@@ -193,8 +227,8 @@ func (IS *InvertedSuffix) Query(Word string, ResultsLimit int) ([]string, []inte
 	return Results, Values
 }
 
-// Returns the strings which contain the query
-// Sorted. The function sorter produces a value to sort by (largest first)
+// Returns the strings which contain the query sorted
+// The function sorter produces a value to sort by (largest first)
 // Input:
 //     Word: The substring to search for.
 //     ResultsLimit: Limit the results to some number of values. Set to -1 for no limit

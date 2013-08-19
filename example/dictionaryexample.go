@@ -1,3 +1,28 @@
+// Copyright 2013 Mark Canning
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+//
+// Author: Mark Canning
+// Developed at: Tamber, Inc. (http://www.tamber.com/).
+//
+// Tamber also has this really cool recommendation engine for music
+// (also development by me) which prioritizes up-and-coming artists, so
+// it doesn't succomb to the popularity biases that plague modern
+// recommendation engines, and still produces excellent personalized
+// recommendations! Make sure to check us out at http://www.tamber.com
+// or https://itunes.apple.com/us/app/tamber-concerts/id658240483
+
 package main
 
 import (
@@ -37,155 +62,127 @@ func main() {
 	fmt.Println("Loaded dictionary in:", time.Now().Sub(t))
 	t = time.Now()
 
-	InvertedSuffix := ferret.MakeInvertedSuffix(Words, Words, Values, Converter)
+	SearchEngine := ferret.New(Words, Words, Values, Converter)
 	fmt.Println("Created index in:", time.Now().Sub(t))
 	t = time.Now()
-	fmt.Println(InvertedSuffix.Query("ar", 5))
+	fmt.Println(SearchEngine.Query("ar", 5))
 	fmt.Println("Performed search in:", time.Now().Sub(t))
 	t = time.Now()
-	fmt.Println(InvertedSuffix.Query("test", 5))
+	fmt.Println(SearchEngine.Query("test", 5))
 	fmt.Println("Performed search in:", time.Now().Sub(t))
 	t = time.Now()
-	fmt.Println(InvertedSuffix.ErrorCorrectingQuery("tsst", 5, Correction))
+	fmt.Println(SearchEngine.ErrorCorrectingQuery("tsst", 5, Correction))
 	fmt.Println("Performed error correcting search in:", time.Now().Sub(t))
 	t = time.Now()
-	fmt.Println(InvertedSuffix.SortedErrorCorrectingQuery("tssst", 5, Correction, LengthSorter))
+	fmt.Println(SearchEngine.SortedErrorCorrectingQuery("tssst", 5, Correction, LengthSorter))
 	fmt.Println("Performed sorted error correcting search in:", time.Now().Sub(t))
 	t = time.Now()
-	fmt.Println(InvertedSuffix.SortedErrorCorrectingQuery("tssst", 5, Correction, FreqSorter))
+	fmt.Println(SearchEngine.SortedErrorCorrectingQuery("tssst", 5, Correction, FreqSorter))
 	fmt.Println("Performed sorted error correcting search in:", time.Now().Sub(t))
 	t = time.Now()
-	fmt.Println(InvertedSuffix.SortedQuery("a", 5, LengthSorter))
+	fmt.Println(SearchEngine.SortedQuery("a", 5, LengthSorter))
 	fmt.Println("Performed sorted search in:", time.Now().Sub(t))
 	t = time.Now()
-	fmt.Println(InvertedSuffix.SortedQuery("a", 5, FreqSorter))
+	fmt.Println(SearchEngine.SortedQuery("a", 5, FreqSorter))
 	fmt.Println("Performed sorted search in:", time.Now().Sub(t))
 	t = time.Now()
-	fmt.Println(InvertedSuffix.Query("a", 5))
+	fmt.Println(SearchEngine.Query("a", 5))
 	fmt.Println("Performed search in:", time.Now().Sub(t))
 	t = time.Now()
-	fmt.Println(InvertedSuffix.Query("the", 25))
+	fmt.Println(SearchEngine.Query("the", 25))
 	fmt.Println("Performed search in:", time.Now().Sub(t))
 	t = time.Now()
-	fmt.Println(InvertedSuffix.SortedQuery("the", 25, FreqSorter))
+	fmt.Println(SearchEngine.SortedQuery("the", 25, FreqSorter))
 	fmt.Println("Performed sorted search in:", time.Now().Sub(t))
 	t = time.Now()
-	InvertedSuffix.Insert("asdfghjklqwertyuiopzxcvbnm", "asdfghjklqwertyuiopzxcvbnm", uint64(0))
+	SearchEngine.Insert("asdfghjklqwertyuiopzxcvbnm", "asdfghjklqwertyuiopzxcvbnm", uint64(0))
 	fmt.Println("Performed insert in:", time.Now().Sub(t))
 	t = time.Now()
-	fmt.Println(InvertedSuffix.Query("sdfghjklqwert", 5))
+	fmt.Println(SearchEngine.Query("sdfghjklqwert", 5))
 	fmt.Println("Performed search in:", time.Now().Sub(t))
 	fmt.Println("Running benchmarks...")
 	t = time.Now()
 	n := 0
-	for _, Query := range InvertedSuffix.Words {
-		InvertedSuffix.Query(string(Query), 5)
+	for _, Query := range SearchEngine.Words {
+		SearchEngine.Query(string(Query), 5)
 		n++
 	}
 	fmt.Println("Performed", n, "limit-5 searches in:", time.Now().Sub(t))
 	t = time.Now()
 	n = 0
-	for _, Query := range InvertedSuffix.Words {
-		InvertedSuffix.Query(string(Query), 25)
+	for _, Query := range SearchEngine.Words {
+		SearchEngine.Query(string(Query), 25)
 		n++
 	}
 	fmt.Println("Performed", n, "limit-25 searches in:", time.Now().Sub(t))
 	t = time.Now()
 	n = 0
-	for _, Query := range InvertedSuffix.Words {
-		InvertedSuffix.SortedQuery(string(Query), 5, LengthSorter)
+	for _, Query := range SearchEngine.Words {
+		SearchEngine.SortedQuery(string(Query), 5, LengthSorter)
 		n++
 	}
 	fmt.Println("Performed", n, "limit-5 length sorted searches in:", time.Now().Sub(t))
 	t = time.Now()
 	n = 0
-	for _, Query := range InvertedSuffix.Words {
-		InvertedSuffix.SortedQuery(string(Query), 25, LengthSorter)
+	for _, Query := range SearchEngine.Words {
+		SearchEngine.SortedQuery(string(Query), 25, LengthSorter)
 		n++
 	}
 	fmt.Println("Performed", n, "limit-25 length sorted searches in:", time.Now().Sub(t))
 	t = time.Now()
 	n = 0
-	for _, Query := range InvertedSuffix.Words {
-		InvertedSuffix.SortedQuery(string(Query), 5, FreqSorter)
+	for _, Query := range SearchEngine.Words {
+		SearchEngine.SortedQuery(string(Query), 5, FreqSorter)
 		n++
 	}
 	fmt.Println("Performed", n, "limit-5 frequency sorted searches in:", time.Now().Sub(t))
 	t = time.Now()
 	n = 0
-	for _, Query := range InvertedSuffix.Words {
-		InvertedSuffix.SortedQuery(string(Query), 25, FreqSorter)
+	for _, Query := range SearchEngine.Words {
+		SearchEngine.SortedQuery(string(Query), 25, FreqSorter)
 		n++
 	}
 	fmt.Println("Performed", n, "limit-25 frequency sorted searches in:", time.Now().Sub(t))
 	t = time.Now()
 	n = 0
-	for _, Query := range InvertedSuffix.Words[:2048] {
-		InvertedSuffix.ErrorCorrectingQuery(string(Query)+"0", 5, Correction)
+	for _, Query := range SearchEngine.Words[:2048] {
+		SearchEngine.ErrorCorrectingQuery(string(Query)+"0", 5, Correction)
 		n++
 	}
 	fmt.Println("Performed", n, "limit-5 error correcting searches in:", time.Now().Sub(t))
 	t = time.Now()
 	n = 0
-	for _, Query := range InvertedSuffix.Words[:2048] {
-		InvertedSuffix.ErrorCorrectingQuery(string(Query)+"0", 25, Correction)
+	for _, Query := range SearchEngine.Words[:2048] {
+		SearchEngine.ErrorCorrectingQuery(string(Query)+"0", 25, Correction)
 		n++
 	}
 	fmt.Println("Performed", n, "limit-25 error correcting searches in:", time.Now().Sub(t))
 	t = time.Now()
 	n = 0
-	for _, Query := range InvertedSuffix.Words[:2048] {
-		InvertedSuffix.SortedErrorCorrectingQuery(string(Query)+"0", 5, Correction, LengthSorter)
+	for _, Query := range SearchEngine.Words[:2048] {
+		SearchEngine.SortedErrorCorrectingQuery(string(Query)+"0", 5, Correction, LengthSorter)
 		n++
 	}
 	fmt.Println("Performed", n, "limit-5 length sorted error correcting searches in:", time.Now().Sub(t))
 	t = time.Now()
 	n = 0
-	for _, Query := range InvertedSuffix.Words[:2048] {
-		InvertedSuffix.SortedErrorCorrectingQuery(string(Query)+"0", 25, Correction, LengthSorter)
+	for _, Query := range SearchEngine.Words[:2048] {
+		SearchEngine.SortedErrorCorrectingQuery(string(Query)+"0", 25, Correction, LengthSorter)
 		n++
 	}
 	fmt.Println("Performed", n, "limit-25 length sorted error correcting searches in:", time.Now().Sub(t))
 	t = time.Now()
 	n = 0
-	for _, Query := range InvertedSuffix.Words[:2048] {
-		InvertedSuffix.SortedErrorCorrectingQuery(string(Query)+"0", 5, Correction, FreqSorter)
+	for _, Query := range SearchEngine.Words[:2048] {
+		SearchEngine.SortedErrorCorrectingQuery(string(Query)+"0", 5, Correction, FreqSorter)
 		n++
 	}
 	fmt.Println("Performed", n, "limit-5 frequency sorted error correcting searches in:", time.Now().Sub(t))
 	t = time.Now()
 	n = 0
-	for _, Query := range InvertedSuffix.Words[:2048] {
-		InvertedSuffix.SortedErrorCorrectingQuery(string(Query)+"0", 25, Correction, FreqSorter)
+	for _, Query := range SearchEngine.Words[:2048] {
+		SearchEngine.SortedErrorCorrectingQuery(string(Query)+"0", 25, Correction, FreqSorter)
 		n++
 	}
 	fmt.Println("Performed", n, "limit-25 frequency sorted error correcting searches in:", time.Now().Sub(t))
-	/*
-		t = time.Now()
-		n = 0
-		SIS := ferret.MakeSortedInvertedSuffix(Words, LengthSorter, []float64{-20.0, -15.0, -10.0, -5.0})
-		fmt.Println("Created SIS in:", time.Now().Sub(t))
-		t = time.Now()
-		fmt.Println(SIS.Query("ar", 5))
-		fmt.Println("Performed sorted search in:", time.Now().Sub(t))
-		t = time.Now()
-		fmt.Println(SIS.Query("test", 5))
-		fmt.Println("Performed sorted search in:", time.Now().Sub(t))
-		t = time.Now()
-		fmt.Println(SIS.ErrorCorrectingQuery("tsst", 5, Correction))
-		fmt.Println("Performed sorted error correcting search in:", time.Now().Sub(t))
-		t = time.Now()
-		fmt.Println(SIS.Query("a", 5))
-		fmt.Println("Performed sorted search in:", time.Now().Sub(t))
-		t = time.Now()
-		fmt.Println(SIS.Query("the", 25))
-		fmt.Println("Performed sorted search in:", time.Now().Sub(t))
-		t = time.Now()
-		SIS.Insert("asdfghjklqwertyuiopzxcvbnm")
-		fmt.Println("Performed insert in:", time.Now().Sub(t))
-		t = time.Now()
-		fmt.Println(SIS.Query("sdfghjklqwert", 5))
-		fmt.Println("Performed sorted search in:", time.Now().Sub(t))
-		t = time.Now()
-	*/
 }

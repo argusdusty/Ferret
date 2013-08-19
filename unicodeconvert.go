@@ -1,3 +1,28 @@
+// Copyright 2013 Mark Canning
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+//
+// Author: Mark Canning
+// Developed at: Tamber, Inc. (http://www.tamber.com/).
+//
+// Tamber also has this really cool recommendation engine for music
+// (also development by me) which prioritizes up-and-coming artists, so
+// it doesn't succomb to the popularity biases that plague modern
+// recommendation engines, and still produces excellent personalized
+// recommendations! Make sure to check us out at http://www.tamber.com
+// or https://itunes.apple.com/us/app/tamber-concerts/id658240483
+
 package ferret
 
 import (
