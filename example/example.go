@@ -61,7 +61,7 @@ var ExampleSorter = func(s string, v interface{}, l int, i int) float64 { return
 var ExampleConverter = func(s string) []byte { return []byte(s) }
 
 func main() {
-	ExampleSearchEngine := ferret.MakeInvertedSuffix(ExampleWords, ExampleWords, ExampleData, ExampleConverter)
+	ExampleSearchEngine := ferret.New(ExampleWords, ExampleWords, ExampleData, ExampleConverter)
 	fmt.Println(ExampleSearchEngine.Query("ar", 5))
 	fmt.Println(ExampleSearchEngine.Query("test", 5))
 	fmt.Println(ExampleSearchEngine.ErrorCorrectingQuery("tsst", 5, ExampleCorrection))
