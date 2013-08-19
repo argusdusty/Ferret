@@ -7,7 +7,7 @@ Allows you to map arbitrary data to your results, and quickly update this data.
 Author: Mark Canning
 Developed at/for: Tamber - http://www.tamber.com/
 
- * Tamber also has this really cool recommendation engine for music (also development by me) that prioritizes up-and-coming artists, so that it doesn't succomb to popularity biases, but still produces great recommendations! Make sure to check us out at http://www.tamber.com or https://itunes.apple.com/us/app/tamber-concerts/id658240483
+Tamber also has this really cool recommendation engine for music (also development by me) that prioritizes up-and-coming artists, so that it doesn't succomb to popularity biases, but still produces great recommendations! Make sure to check us out at http://www.tamber.com or https://itunes.apple.com/us/app/tamber-concerts/id658240483
 
 To Install: go get github.com/argusdusty/Ferret
 To Update: go get -u github.com/argusdusty/Ferret
