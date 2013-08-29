@@ -6,7 +6,7 @@ Also incorporates error-correction (Levenshtein distance 1) and simple Unicode-t
 Allows for arbitrary sorting functions
 Allows you to map arbitrary data to your results, and quickly update this data.
 
-***Author:*** Mark Canning 
+***Author:*** Mark Canning <br>
 ***Developed at/for:*** Tamber - http://www.tamber.com/
 
 About Tamber
@@ -15,9 +15,9 @@ Tamber also has this really cool recommendation engine for music (also developme
 
 Installing
 ----------
-To Install: go get github.com/argusdusty/Ferret
-To Update: go get -u github.com/argusdusty/Ferret
-To Use: import "github.com/argusdusty/Ferret"
+Install: `go get github.com/argusdusty/Ferret` <br>
+Update: `go get -u github.com/argusdusty/Ferret` <br>
+User: `import "github.com/argusdusty/Ferret"` <br>
 
 Performance
 -----------
@@ -34,31 +34,37 @@ Sample usage
 
 ###Initializing the search engine:
 ```go
-// Allows for exact (case-sensitive) substring searches over a list of songs mapping their respective artists, allowing sorting by the song popularity
+// Allows for exact (case-sensitive) substring searches over a list of songs 
+// mapping their respective artists, allowing sorting by the song popularity
 SearchEngine := ferret.New(Songs, Artists, SongPopularities, func(s string) []byte { return []byte(s) })
 
-// Allows for lowercase-ASCII substring searches over a list of songs mapping their respective artists, allowing sorting by the song popularity
+// Allows for lowercase-ASCII substring searches over a list of songs
+// mapping their respective artists, allowing sorting by the song popularity
 SearchEngine := ferret.New(Songs, Artists, SongPopularities, ferret.UnicodeToLowerASCII)
 
-// Allows for lowercase-ASCII substring searches over a list of artists, allowing sorting by the artist popularity
+// Allows for lowercase-ASCII substring searches over a list of artists,
+// allowing sorting by the artist popularity
 SearchEngine := ferret.New(Artists, Artists, ArtistPopularities, ferret.UnicodeToLowerASCII)
 ```
 		
 ###Inserting a new element into the search engine:
 ```go
-// Add a song to an existing SearchEngine, written by Artist, and with popularity SongPopularity
+// Add a song to an existing SearchEngine, written by Artist,
+// and with popularity SongPopularity
 SearchEngine.Insert(Song, Artist, SongPopularity)
 ```
 
 ###Performing simple unsorted substring search:
 ```go
-// For songs - returns a list of up to 25 artists of the matching songs, and the song popularities
+// For songs - returns a list of up to 25 artists of the matching songs,
+// and the song popularities
 SearchEngine.Query(SongQuery, 25)
 ```
 	
 ###Performing a sorted substring search:
 ```go
-// For songs - returns a list of up to 25 artists of the matching songs, and the song popularities, sorted by the song popularities
+// For songs - returns a list of up to 25 artists of the matching songs,
+// and the song popularities, sorted by the song popularities
 // assuming the song popularities are float64s
 SearchEngine.SortedQuery(SongQuery, 25, func(s string, v interface{}, l int, i int) float64 { return v.(float64) })
 ```
