@@ -26,7 +26,7 @@ Searches performed in log time with the number of characters in the dictionary.
 Sorted searches can be slow, taking ~linear time with the number of matches, rather than linear time with the results limit.
 Initialization takes linearithmic (ln(n)*n) time (being a sorting algorithm)
 
-The code is meant to be as fast as possible for a substring dictionary search, and as such is best suited for medium-large dictionaries with ~1-100 million total characters. I've timed 10s initialization for 3.5 million characters on a modern CPU, and 10us search time (4000us with error-correction), so this system is capable of ~100,000 queries per second on a single processor.
+The code is meant to be as fast as possible for a substring dictionary search, and as such is best suited for medium-large dictionaries with ~1-100 million total characters. I've timed 10s initialization for 3.5 million characters on a modern CPU, and 10us search time (4000us with error-correction), so this system is capable of ~100,000 queries per second on a single processor - feel free to try the benchmarks in dictionaryexample.go.
 
 
 Sample usage
