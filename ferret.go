@@ -102,7 +102,7 @@ func New(Words, Results []string, Data []interface{}, Converter func(string) []b
 
 // Adds a word to the dictionary that IS was built on.
 // This is pretty slow, because of linear-time insertion into an array,
-// so stick to MakeInvertedSuffix when you can
+// so stick to New when you can
 func (IS *InvertedSuffix) Insert(Word, Result string, Data interface{}) {
 	Query := IS.Converter(Word)
 	low, high := IS.Search(Query)
