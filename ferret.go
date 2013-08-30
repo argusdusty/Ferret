@@ -81,9 +81,9 @@ func (SW *sortWrapper) Less(i, j int) bool {
 
 // Creates an inverted suffix from a dictionary of byte arrays, mapping data, and a string->[]byte converter
 func New(Words, Results []string, Data []interface{}, Converter func(string) []byte) *InvertedSuffix {
-	WordIndex := make([]int, 0)
-	SuffixIndex := make([]int, 0)
-	NewWords := make([][]byte, 0)
+	WordIndex := make([]int, 0, len(Words))
+	SuffixIndex := make([]int, 0, len(Words))
+	NewWords := make([][]byte, 0, len(Words))
 	for i, Word := range Words {
 		word := Converter(Word)
 		for j := 0; j < len(word); j++ {
