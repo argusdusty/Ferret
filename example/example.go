@@ -27,7 +27,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/argusdusty/ferret"
+	"github.com/argusdusty/Ferret"
 )
 
 // Some words to search for and return

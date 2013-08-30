@@ -28,7 +28,7 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/argusdusty/ferret"
+	"github.com/argusdusty/Ferret"
 	"io/ioutil"
 	"strconv"
 	"time"
