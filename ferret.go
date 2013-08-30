@@ -76,10 +76,7 @@ func (SW *sortWrapper) Less(i, j int) bool {
 		pa++
 		pb++
 	}
-	if pa == na {
-		return true
-	}
-	return false
+	return pa == na
 }
 
 // Creates an inverted suffix from a dictionary of byte arrays, mapping data, and a string->[]byte converter
