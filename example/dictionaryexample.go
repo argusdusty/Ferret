@@ -47,7 +47,8 @@ func main() {
 	}
 	Words := make([]string, 0)
 	Values := make([]interface{}, 0)
-	for _, Vals := range bytes.Split(Data, []byte("\r\n")) {
+	for _, Vals := range bytes.Split(Data, []byte("\n")) {
+		Vals = bytes.TrimSpace(Vals)
 		WordFreq := bytes.Split(Vals, []byte(" "))
 		if len(WordFreq) != 2 {
 			continue
