@@ -73,4 +73,9 @@ func main() {
 	fmt.Println(ExampleSearchEngine.Query("ferret", 5))
 	ExampleSearchEngine.Insert("ferret", "ferret", []uint64{7})
 	fmt.Println(ExampleSearchEngine.Query("ferret", 5))
+
+	fmt.Println(ExampleSearchEngine.Query("e", -1))
+	fmt.Println(ExampleSearchEngine.SortedQuery("e", -1, ExampleSorter))
+	fmt.Println(ExampleSearchEngine.ErrorCorrectingQuery("e", -1, ExampleCorrection))
+	fmt.Println(ExampleSearchEngine.SortedErrorCorrectingQuery("e", -1, ExampleCorrection, ExampleSorter))
 }

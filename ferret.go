@@ -207,6 +207,12 @@ func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 //     ResultsLimit: Limit the results to some number of values. Set to -1 for no limit
 func (IS *InvertedSuffix) Query(Word string, ResultsLimit int) ([]string, []interface{}) {
 	Query := IS.Converter(Word)
+	if ResultsLimit == 0 {
+		return []string{}, []interface{}{}
+	}
+	if ResultsLimit < 0 {
+		ResultsLimit = 0
+	}
 	Results := make([]string, 0, ResultsLimit)
 	Values := make([]interface{}, 0, ResultsLimit)
 	low, high := IS.Search(Query)
@@ -237,9 +243,18 @@ func (IS *InvertedSuffix) Query(Word string, ResultsLimit int) ([]string, []inte
 //         and produces a value (float64) to sort by (largest first).
 func (IS *InvertedSuffix) SortedQuery(Word string, ResultsLimit int, Sorter func(string, interface{}, int, int) float64) ([]string, []interface{}, []float64) {
 	Query := IS.Converter(Word)
+	if ResultsLimit == 0 {
+		return []string{}, []interface{}{}, []float64{}
+	}
+	if ResultsLimit < 0 {
+		ResultsLimit = 0
+	}
 	Results := make([]string, 0, ResultsLimit)
 	Values := make([]interface{}, 0, ResultsLimit)
 	Scores := make([]float64, 0, ResultsLimit)
+	if ResultsLimit == 0 {
+		ResultsLimit = -1
+	}
 	low, high := IS.Search(Query)
 	a := 0
 	used := make(map[int]float64, 0)
@@ -303,6 +318,12 @@ func (IS *InvertedSuffix) SortedQuery(Word string, ResultsLimit int, Sorter func
 //     ErrorCorrection: Returns a list of alternate queries
 func (IS *InvertedSuffix) ErrorCorrectingQuery(Word string, ResultsLimit int, ErrorCorrection func([]byte) [][]byte) ([]string, []interface{}) {
 	Query := IS.Converter(Word)
+	if ResultsLimit == 0 {
+		return []string{}, []interface{}{}
+	}
+	if ResultsLimit < 0 {
+		ResultsLimit = 0
+	}
 	Results := make([]string, 0, ResultsLimit)
 	Values := make([]interface{}, 0, ResultsLimit)
 	low, high := IS.Search(Query)
@@ -354,9 +375,18 @@ func (IS *InvertedSuffix) ErrorCorrectingQuery(Word string, ResultsLimit int, Er
 //         (string, []byte, int, int), and produces a value (float64) to sort by (largest first).
 func (IS *InvertedSuffix) SortedErrorCorrectingQuery(Word string, ResultsLimit int, ErrorCorrection func([]byte) [][]byte, Sorter func(string, interface{}, int, int) float64) ([]string, []interface{}, []float64) {
 	Query := IS.Converter(Word)
+	if ResultsLimit == 0 {
+		return []string{}, []interface{}{}, []float64{}
+	}
+	if ResultsLimit < 0 {
+		ResultsLimit = 0
+	}
 	Results := make([]string, 0, ResultsLimit)
 	Values := make([]interface{}, 0, ResultsLimit)
 	Scores := make([]float64, 0, ResultsLimit)
+	if ResultsLimit == 0 {
+		ResultsLimit = -1
+	}
 	low, high := IS.Search(Query)
 	a := 0
 	used := make(map[int]float64, 0)
