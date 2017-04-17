@@ -1,6 +1,6 @@
 Ferret
 ======
-##An optimized substring search engine written in Go.
+## An optimized substring search engine written in Go.
 Ferret makes use of a combination of an Inverted Index and a Suffix Array to allow log-time lookups with a relatively small memory footprint.
 Also incorporates error-correction (Levenshtein distance 1) and simple Unicode-to-ASCII conversion.
 Allows for arbitrary sorting functions
@@ -32,7 +32,7 @@ The code is meant to be as fast as possible for a substring dictionary search, a
 Sample usage
 ------------
 
-###Initializing the search engine:
+### Initializing the search engine:
 ```go
 // Allows for exact (case-sensitive) substring searches over a list of songs 
 // mapping their respective artists, allowing sorting by the song popularity
@@ -47,21 +47,21 @@ SearchEngine := ferret.New(Songs, Artists, SongPopularities, ferret.UnicodeToLow
 SearchEngine := ferret.New(Artists, Artists, ArtistPopularities, ferret.UnicodeToLowerASCII)
 ```
 		
-###Inserting a new element into the search engine:
+### Inserting a new element into the search engine:
 ```go
 // Add a song to an existing SearchEngine, written by Artist,
 // and with popularity SongPopularity
 SearchEngine.Insert(Song, Artist, SongPopularity)
 ```
 
-###Performing simple unsorted substring search:
+### Performing simple unsorted substring search:
 ```go
 // For songs - returns a list of up to 25 artists of the matching songs,
 // and the song popularities
 SearchEngine.Query(SongQuery, 25)
 ```
 	
-###Performing a sorted substring search:
+### Performing a sorted substring search:
 ```go
 // For songs - returns a list of up to 25 artists of the matching songs,
 // and the song popularities, sorted by the song popularities
@@ -69,5 +69,5 @@ SearchEngine.Query(SongQuery, 25)
 SearchEngine.SortedQuery(SongQuery, 25, func(s string, v interface{}, l int, i int) float64 { return v.(float64) })
 ```
 
-###More examples	
+### More examples	
 Check out example.go and dictionaryexample.go for more example usage.
