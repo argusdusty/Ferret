@@ -62,7 +62,7 @@ var LowercaseLetters = []byte{
 	111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122,
 }
 
-// Returns all byte-arrays which are Levenshtein distance of 1 away from Word
+// ErrorCorrect returns all byte-arrays which are Levenshtein distance of 1 away from Word
 // within an allowed array of byte characters.
 func ErrorCorrect(Word []byte, AllowedBytes []byte) [][]byte {
 	results := make([][]byte, 0)

@@ -101,7 +101,7 @@ func New(Words, Results []string, Data []interface{}, Converter func(string) []b
 	return Suffixes
 }
 
-// Adds a word to the dictionary that IS was built on.
+// Insert adds a word to the dictionary that IS was built on.
 // This is pretty slow, because of linear-time insertion into an array,
 // so stick to New when you can
 func (IS *InvertedSuffix) Insert(Word, Result string, Data interface{}) {
@@ -201,7 +201,7 @@ func (IS *InvertedSuffix) Search(Query []byte) (int, int) {
 	return low, high
 }
 
-// Returns the strings which contain the query, and their stored values unsorted
+// Query returns the strings which contain the query, and their stored values unsorted
 // Input:
 //     Word: The substring to search for.
 //     ResultsLimit: Limit the results to some number of values. Set to -1 for no limit
@@ -234,7 +234,7 @@ func (IS *InvertedSuffix) Query(Word string, ResultsLimit int) ([]string, []inte
 	return Results, Values
 }
 
-// Returns the strings which contain the query sorted
+// SortedQuery returns the strings which contain the query sorted
 // The function sorter produces a value to sort by (largest first)
 // Input:
 //     Word: The substring to search for.
@@ -308,7 +308,7 @@ func (IS *InvertedSuffix) SortedQuery(Word string, ResultsLimit int, Sorter func
 	return Results, Values, Scores
 }
 
-// Returns the strings which contain the query
+// ErrorCorrectingQuery returns the strings which contain the query
 // Unsorted, I think it's partially sorted alphabetically
 // Will search for all substrings defined by ErrorCorrection
 // if no results are found on the initial query
@@ -363,7 +363,7 @@ func (IS *InvertedSuffix) ErrorCorrectingQuery(Word string, ResultsLimit int, Er
 	return Results, Values
 }
 
-// Returns the strings which contain the query
+// SortedErrorCorrectingQuery returns the strings which contain the query
 // Sorted. The function sorter produces a value to sort by (largest first)
 // Will search for all substrings defined by ErrorCorrection
 // if no results are found on the initial query
