@@ -15,25 +15,20 @@
 //
 // Author: Mark Canning
 // Developed at: Tamber, Inc. (http://www.tamber.com/).
-//
-// Tamber also has this really cool recommendation engine for music
-// (also development by me) which prioritizes up-and-coming artists, so
-// it doesn't succomb to the popularity biases that plague modern
-// recommendation engines, and still produces excellent personalized
-// recommendations! Make sure to check us out at http://www.tamber.com
-// or https://itunes.apple.com/us/app/tamber-concerts/id658240483
 
-package ferret
+// Package ferret implements a fast in-memory substring search engine
+package ferret // import "github.com/argusdusty/Ferret"
 
 import "sort"
 
+// InvertedSuffix implements the data structure for substring searches
 type InvertedSuffix struct {
 	WordIndex   []int               // WordIndex and SuffixIndex are sorted by Words[WordIndex[i]][SuffixIndex[i]:]
 	SuffixIndex []int               // WordIndex and SuffixIndex are sorted by Words[WordIndex[i]][SuffixIndex[i]:]
-	Words       [][]byte            // The words to perform substring searches over
-	Results     []string            // The 'true' value of the words. Used as a return value
-	Values      []interface{}       // Some data mapped to the words. Used for sorting, and as a return value
-	Converter   func(string) []byte // A converter for an inserted word/query to a byte array to search for/with
+	Words       [][]byte            // Words is the list of words (in []byte form) to perform substring searches over
+	Results     []string            // Results is the string value of the words. Used as a return value
+	Values      []interface{}       // Values is some data mapped to the words. Can be used for sorting, or as a return value
+	Converter   func(string) []byte // Converter converts an inserted word/query to a byte array to search for/with
 }
 
 // A wrapper type used to sort the three arrays according to sort.sort
@@ -79,7 +74,7 @@ func (SW *sortWrapper) Less(i, j int) bool {
 	return pa == na
 }
 
-// Creates an inverted suffix from a dictionary of byte arrays, mapping data, and a string->[]byte converter
+// New creates an inverted suffix from a dictionary of byte arrays, mapping data, and a string->[]byte converter
 func New(Words, Results []string, Data []interface{}, Converter func(string) []byte) *InvertedSuffix {
 	CharCount := 0
 	NewWords := make([][]byte, len(Words))
@@ -129,7 +124,7 @@ func (IS *InvertedSuffix) Insert(Word, Result string, Data interface{}) {
 	}
 }
 
-// Performs an exact substring search for the query in the word dictionary
+// Search performs an exact substring search for the query in the word dictionary
 // Returns the boundaries (low/high) of sorted suffixes which have the query as a prefix
 // This is a low-level interface. I wouldn't recommend using this yourself
 func (IS *InvertedSuffix) Search(Query []byte) (int, int) {

@@ -15,13 +15,6 @@
 //
 // Author: Mark Canning
 // Developed at: Tamber, Inc. (http://www.tamber.com/).
-//
-// Tamber also has this really cool recommendation engine for music
-// (also development by me) which prioritizes up-and-coming artists, so
-// it doesn't succomb to the popularity biases that plague modern
-// recommendation engines, and still produces excellent personalized
-// recommendations! Make sure to check us out at http://www.tamber.com
-// or https://itunes.apple.com/us/app/tamber-concerts/id658240483
 
 package ferret
 
@@ -30,7 +23,7 @@ import (
 	"unicode"
 )
 
-// Only handles Latin-1 Supplement
+// UnicodeToASCII maps the unicode Latin-1 supplement to ASCII characters without accents
 var UnicodeToASCII = map[rune]rune{
 	'À': 'A', 'Á': 'A', 'Â': 'A', 'Ã': 'A', 'Ä': 'A', 'Å': 'A',
 	'Ç': 'C',
@@ -51,6 +44,7 @@ var UnicodeToASCII = map[rune]rune{
 	'ý': 'y', 'ÿ': 'y',
 }
 
+// ToASCII converts a single unicode rune to the ASCII equivalent using the UnicodeToASCII table
 func ToASCII(r rune) rune {
 	a, ok := UnicodeToASCII[r]
 	if ok {
@@ -59,6 +53,7 @@ func ToASCII(r rune) rune {
 	return r
 }
 
+// UnicodeToLowerASCII converts a unicode string to ASCII bytes using the UnicodeToASCII table
 func UnicodeToLowerASCII(s string) []byte {
 	return []byte(strings.Map(func(r rune) rune { return unicode.ToLower(ToASCII(r)) }, s))
 }

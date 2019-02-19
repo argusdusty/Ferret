@@ -15,13 +15,6 @@
 //
 // Author: Mark Canning
 // Developed at: Tamber, Inc. (http://www.tamber.com/).
-//
-// Tamber also has this really cool recommendation engine for music
-// (also development by me) which prioritizes up-and-coming artists, so
-// it doesn't succomb to the popularity biases that plague modern
-// recommendation engines, and still produces excellent personalized
-// recommendations! Make sure to check us out at http://www.tamber.com
-// or https://itunes.apple.com/us/app/tamber-concerts/id658240483
 
 package main
 
